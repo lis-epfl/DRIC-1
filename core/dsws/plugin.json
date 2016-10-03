@@ -1,0 +1,8 @@
+{
+    "manifest-version": 1.0,
+    "name": "DRIC Datasource Over Websocket",
+    "id": "DRICdsws",
+    "description": "This plugin allows client to access the Datasource API through a websocket",
+    "author": "Arthur Gay",
+    "load": ["static.py"]
+}
