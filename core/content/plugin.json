@@ -1,0 +1,8 @@
+{
+    "manifest-version": 1.0,
+    "name": "DRIC Static File Server",
+    "id": "DRICStatic",
+    "description": "This plugin serves static files",
+    "author": "Arthur Gay",
+    "load": ["static.py"]
+}
