@@ -1,0 +1,12 @@
+{
+    "manifest-version": 1.0,
+    "name": "Network",
+    "id": "DRICNetwork",
+    "description": "This plugin displays clients' infos",
+    "author": "Arthur Gay",
+    "load": ["dispip.py", "box.py", "netc.py"],
+    "static_files": {
+        "/js/dricnetwork_box.js": "js/network_box.js",
+        "/templates/dricnetworkbox.mustache": "templates/box_content.mustache"
+    }
+}
