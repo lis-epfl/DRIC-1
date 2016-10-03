@@ -1,0 +1,7 @@
+{
+    "manifest-version": 1.0,
+    "name": "Map",
+    "id": "Map",
+    "description": "Show a map",
+    "author": "Arthur Gay"
+}

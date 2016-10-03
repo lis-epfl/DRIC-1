@@ -1,0 +1,18 @@
+map:
+    tiles:              plugins/map/maps/tiles
+    slicer:
+        # source directory
+        source:         plugins/map/maps/source
+        # destination directory
+        destination:    plugins/map/maps/tiles
+        # when to invoke the slicer: 
+        #   ALWAYS when the plugins is setuped (plugin setup)=
+        #   IF_CHANGED when the source is new or changed (default)  # NOT IMPLEMENTED
+        #   ~ do not slice map automatically
+        invoke:         IF_CHANGED  # NOT IMPLEMENTED
+        # zoom level, a strictly positive integer
+        zoom:           5
+
+
+        
+...
