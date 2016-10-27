@@ -25,7 +25,7 @@ class Configurable(object):
         return class_
 
 class ConfigurePass(Pass):
-    def load(self, plugin):
+    def load(self, plugin, name):
         if(hasattr(plugin.__class__, 'dric_support_configurable') and plugin.__class__.dric_support_configurable is True):
             dir = dirname(getsourcefile(plugin.__class__))
             

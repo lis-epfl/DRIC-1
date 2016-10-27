@@ -4,6 +4,8 @@ Plugin support library
 
 import dric
 from hashlib import sha1
+from random import sample
+from string import join, ascii_letters
 
 class ContentScriptInjector(dric.Plugin):
     def __init__(self, content_scripts):
@@ -20,6 +22,9 @@ def inject_content_script(path, runat='async'):
     name = __name__ + '-content-script-' + path
     dric.register(name, ContentScriptInjector({'path':path, 'runat':runat}))
 
+def inject_content_scripts(scripts):
+    name = __name__ + '-content-script-' + join(sample(ascii_letters, 8), '')
+    dric.register(name, ContentScriptInjector(scripts))
 
 def route(endpoint, route):
     """
