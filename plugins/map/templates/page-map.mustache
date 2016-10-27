@@ -1,22 +1,80 @@
-<section class="content body page" style="height:100%;width:100%;position:absolute;" id="page-map" data-on-after-show="page_map_after_show" hidden>
-    <div class="row" style="height:75%">
-        <div id="dric-map" style="width: 100%; height: 100%; position: relative; outline: none;">
+<section class="content body page" id="page-map" data-on-after-show="page_map_after_show" hidden>
+    <div class="row">
+        <div id="dric-map">
 
         </div>
-    </div>   
+    </div>
     <div class="row">
-        
-        <div class="col-md-3">
-            <div class="box">
-                <div class="box-body">
-                    <div class="form-group">
-                        <label>Choose a map tile</label>
-                        <select class="form-control map-select-tiles">
-                            
-                        </select>
+        <div class="col-md-12">
+            <!-- START .box-body -->
+
+            <div class="form-group col-md-3">
+                <label>Choose a map tile</label>
+                <select class="form-control map-select-tiles"></select>
+            </div>
+            <div class="form-group col-md-3">
+                <label>Map tools</label>
+                <div class="btn-toolbar" role="toolbar">
+                    <div class="btn-group" data-toggle="buttons">
+                        <label class="btn btn-default"><input type="radio" name="options" id="map-toolbar-cursor" checked="checked"><i class="fa fa-mouse-pointer"></i></label>
+                        <label class="btn btn-default"><input type="radio" name="options" id="map-toolbar-waypoint"><i class="fa fa-map-marker"></i></label>
                     </div>
                 </div>
             </div>
-        </div>
+            <div class="form-group col-md-3">
+                <label>Waypoints</label>
+                <select multiple="" class="form-control" id="map-select-waypoint"></select>
+                <div class="btn-toolbar" role="toolbar">
+                    <div class="btn-group" data-toggle="buttons">
+                        <button class="btn btn-default waypoint-control" id="map-delete-waypoint" disabled>
+                            <i class="fa fa-trash"></i>
+                        </button>
+                        <button class="btn btn-default waypoint-control map-order-waypoint"  data-direction="down" disabled>
+                            <i class="fa fa-arrow-down"></i>
+                        </button>
+                        <button class="btn btn-default waypoint-control map-order-waypoint" data-direction="up" disabled>
+                            <i class="fa fa-arrow-up"></i>
+                        </button>
+                    </div>
+                    <a class="map-save-waypoints">Download</a>
+                    <input id="map-waypoints-file" type="file">
+                    <a class="map-open-waypoints">Load</a>
+                </div>
+            </div>
+            <div class="col-md-3" id="map-waypoint-editor">
+                    <label>No waypoint selected</label>
+                    <div class="form-group">
+                        <label class="col-sm-6">Hold [s]:</label>
+                        <input class="col-sm-6 waypoint-control" type="text" name="hold" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6">Radius [m]:</label>
+                        <input class="col-sm-6 waypoint-control" type="text" name="radius" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6">Trajectory:</label>
+                        <input class="col-sm-6 waypoint-control" type="text" name="trajectory" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6">Yaw [deg]:</label>
+                        <input class="col-sm-6 waypoint-control" type="text" name="yaw" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6">Latitude:</label>
+                        <input class="col-sm-6 waypoint-control" type="text" name="latitude" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6">Longitude:</label>
+                        <input class="col-sm-6 waypoint-control" type="text" name="longitude" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-6">Altitude:</label>
+                        <input class="col-sm-6 waypoint-control" type="text" name="altitude" disabled>
+                    </div>
+                    <div class="form-group">
+                        <input class="col-sm-12 btn btn-default waypoint-control" type="submit" value="set" disabled>
+                    </div>
+            </div>
+        </div> <!-- END .box-body -->
     </div>
 </section>
