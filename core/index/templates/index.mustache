@@ -13,6 +13,8 @@
     <!-- AdminLTE Skins. Choose a skin from the css/skins
          folder instead of downloading all of them to reduce the load. -->
     <link rel="stylesheet" href="/css/skins/_all-skins.min.css">
+
+    <link rel="stylesheet" href="/content/core/index/adminlte_plugins/bootstrap-slider/slider.css" />
     <!-- common css-->
     <!--<link href="content/core/index/adminlte_plugins/select2/select2.min.css" rel="stylesheet">-->
     <style>
@@ -42,15 +44,18 @@
     <link rel="stylesheet" href="{{.}}">
     {{/content_scripts.css}}
     <!-- end of : custom css -->
-
-    
     <!-- JQuery 2.1.0 -->
     <script src="/content/core/index/lib/js/jquery-2.1.0.min.js"></script>
+    <script src="/content/core/index/adminlte_plugins/jQueryUI/jquery-ui.min.js"></script>
     <script src="/content/core/index/lib/js/bootstrap.min.js"></script>
+    <script src="/content/core/index/adminlte_plugins/bootstrap-slider/bootstrap-slider.js"></script>
+
+    <!-- Vue.js -->
+    <script src="/content/core/index/lib/js/vue.js"></script>
     <script>
         var wr_adr = "{0}";
     </script>
-    
+
     <!-- common js -->
     <!--<script src="/content/core/index/adminlte_plugins/select2/select2.min.js"></script>-->
     <script src="/content/core/index/lib/js/anychart-bundle.min.js"></script>
@@ -97,7 +102,7 @@
                             <span>Network</span>
                         </a>
                     </li>
-                    <li class="treeview">
+                    <!--<li class="treeview">
                         <a href="#">
                             <i class="fa fa-plug"></i>
                             <span>Plugins</span>
@@ -119,7 +124,7 @@
                                 </a>
                             </li>
                         </ul>
-                    </li>
+                    </li>-->
                 </ul><!-- /.sidebar-menu -->
 
             </div><!-- /.sidebar -->
@@ -221,13 +226,15 @@
                     <div class="control-sidebar-bg"></div>-->
     </div><!-- ./wrapper -->
     <!-- jQuery UI 1.11.4 -->
-    <script src="/content/core/index/adminlte_plugins/jQueryUI/jquery-ui.min.js"></script>
     <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
     <script>
         $.widget.bridge('uibutton', $.ui.button);
     </script>
     <script src="/content/core/index/adminlte_plugins/flot/jquery.flot.min.js"></script>
+    <script src="/content/core/index/adminlte_plugins/flot/jquery.flot.navigate.js"></script>
     <script src="/content/core/index/adminlte_plugins/flot/jquery.flot.time.min.js"></script>
+
+    <!-- bootstrap slider -->
     <!-- Slimscroll -->
     <!--<script src="/static/plugins/slimScroll/jquery.slimscroll.min.js"></script>-->
     <!-- FastClick -->
@@ -239,7 +246,9 @@
     <!--<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDeBoWQ0KzO4Yc_NNrZcjCJTr8au0RYbjc&callback=initMap" type="text/javascript"></script>-->
     <!-- templating engine -->
     <script src="/content/core/index/lib/js/mustache.min.js"></script>
-    <script src="/js/box.js"></script>
+
+
+    <script src="/content/core/index/box.js"></script>
     <script type="text/javascript">
         $(function () {
             $(".connectedSortable").sortable({

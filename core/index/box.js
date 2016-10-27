@@ -1,4 +1,4 @@
-require("bootstrap-treeview.min.js");
+//import "bootstrap-treeview/bootstrap-treeview.min.js";
 
 if (typeof dric === 'undefined') {
     dric = new function () {
