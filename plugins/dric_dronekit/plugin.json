@@ -1,0 +1,8 @@
+{
+    "manifest-version": 1.0,
+    "name": "DRIC-DRONEKIT",
+    "id": "DRIC-DRONEKIT",
+    "plugin-uri": "",
+    "author": "Arthur Gay",
+    "license-uri": "https://www.gnu.org/licenses/gpl-2.0.html"
+}
