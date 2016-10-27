@@ -1,4 +1,3 @@
-
 function dricNetwork() {
     if (typeof dric === 'undefined') {
         dric = new Object();

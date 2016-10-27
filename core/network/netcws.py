@@ -16,9 +16,7 @@ class NetClient(object):
         self.ip = ip
         self.name = name
         self.close = False
-        self.messages = []
-
-    
+        self.messages = []    
 
 class NamesManager(object):
     def __init__(self):
