@@ -1,0 +1,7 @@
+{
+    "manifest-version": 1.0,
+    "name": "DRIC Devtools",
+    "id": "DRICDevTools",
+    "description": "This plugin adds developer tools",
+    "author": "Arthur Gay"
+}
