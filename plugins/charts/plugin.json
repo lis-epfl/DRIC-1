@@ -1,0 +1,7 @@
+{
+  "manifest-version": 1.0,
+  "name": "SAMPLE-chart",
+  "id": "SAMPLEChart",
+  "description": "Show sample charts",
+  "author": "Arthur Gay"
+}

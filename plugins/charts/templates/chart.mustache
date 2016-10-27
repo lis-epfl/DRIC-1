@@ -1,0 +1,22 @@
+<div id="vapp-charts">
+    <div style="width:100%; height:400px" id="samples-chart"
+         v-on:mousewheel="zoom"
+         v-on:mousemove="pan"
+         v-on:mousedown="mousedown"
+         v-on:mouseup="mouseup"
+         v-on:mouseexit="mouseup"
+         v-on:mouseenter="mouseup"
+         v-bind:style="{cursor: cursor}">
+    </div>
+    <div class="btn-group">
+        <button class="btn btn-default" data-toggle="button" title="Record" v-on:click="startRecord"><i class="fa fa-circle"></i></button>
+        <button class="btn btn-default" data-toggle="button" title="Pause" v-on:click="pause"><i class="fa fa-pause"></i></button>
+    </div>
+    <div class="btn-group">
+        <button class="btn btn-default" title="Zoom auto" v-on:click="zoomAuto"><i class="fa fa-arrows-alt"></i></button>
+        <button class="btn btn-default" title="Zoom +" v-on:click="zoomPlus"><i class="fa fa-search-plus"></i></button>
+        <button class="btn btn-default" title="Zoom -" v-on:click="zoomMinus"><i class="fa fa-search-minus"></i></button>
+    </div>
+    <div class="chart-source-tree">
+    </div>
+</div>
