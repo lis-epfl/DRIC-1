@@ -1,0 +1,19 @@
+{
+  "name": "dric-mavlink",
+  "version": "1.0.0",
+  "description": "",
+  "main": "js/dric-mavlink.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "circular-buffer": "^1.0.2",
+    "dataview-getstring": "^0.1.0",
+    "debounce": "^1.0.0",
+    "vue": "^2.0.3",
+    "webpack": "^1.13.2",
+    "websocket.js": "^0.1.6"
+  }
+}
