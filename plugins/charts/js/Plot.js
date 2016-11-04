@@ -218,7 +218,8 @@
             el: '#vapp-charts',
             data: {
                 cursor: 'default',
-                mousedown: false
+                mousedown: false,
+                xaxis: 60
             },
             methods: {
                 pause: function (e) {
@@ -244,7 +245,8 @@
                     e.preventDefault(); this.mouseButtonDown = false;
                     options.yaxis._d.pan.mousedragstop();
                     lastxdrag = null;
-                }
+                },
+                clear: function () { plotRegistry.clear(); }
             }
         });
 
