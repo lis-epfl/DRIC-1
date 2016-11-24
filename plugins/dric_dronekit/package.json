@@ -13,6 +13,6 @@
     "vue": "^2.0.3",
     "webpack": "^1.13.2",
     "websocket.js": "^0.1.6",
-    "websocketdatasource": "file:..\\..\\..\\WebSocketDatasource\\WebSocketDatasource"
+    "websocket-datasource": "arth-ur/websocket-datasource#v1.0"
   }
 }
