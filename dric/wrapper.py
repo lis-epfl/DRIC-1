@@ -1,16 +1,53 @@
 from werkzeug.wrappers import BaseResponse, Request
-from json import dumps
+from json import dumps as json_dumps
 from builtins import super
 import StringIO
 import gzip
 
+try:
+  from lxml import etree
+  print("running with lxml.etree")
+except ImportError:
+  try:
+    # Python 2.5
+    import xml.etree.cElementTree as etree
+    print("running with cElementTree on Python 2.5+")
+  except ImportError:
+    try:
+      # Python 2.5
+      import xml.etree.ElementTree as etree
+      print("running with ElementTree on Python 2.5+")
+    except ImportError:
+      try:
+        # normal cElementTree install
+        import cElementTree as etree
+        print("running with cElementTree")
+      except ImportError:
+        try:
+          # normal ElementTree install
+          import elementtree.ElementTree as etree
+          print("running with ElementTree")
+        except ImportError:
+          print("Failed to import ElementTree from any known place")
+
+
 class JSONResponse(BaseResponse):
     def __init__(self, response=None, status=None, headers=None, mimetype=None, content_type=None, direct_passthrough=False):
-        content = dumps(response)
+        content = json_dumps(response)
         if mimetype is None:
             mimetype = 'application/json'
         if content_type is None:
             content_type = 'application/json'
+        
+        super().__init__(response=content, status=status, headers=headers, mimetype=mimetype, content_type=content_type, direct_passthrough=direct_passthrough)
+
+class XMLResponse(BaseResponse):
+    def __init__(self, response=None, status=None, headers=None, mimetype=None, content_type=None, direct_passthrough=False):
+        content = etree.tostring(response, encoding="UTF-8", method="xml")
+        if mimetype is None:
+            mimetype = 'application/xml'
+        if content_type is None:
+            content_type = 'application/xml'
         
         super().__init__(response=content, status=status, headers=headers, mimetype=mimetype, content_type=content_type, direct_passthrough=direct_passthrough)
         

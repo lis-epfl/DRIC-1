@@ -4,4 +4,6 @@ from ._webpack import WebpackWatchPlugin
 
 from dric import get_pass_manager
 
+import datasource
+
 get_pass_manager().add_pass(ConfigurePass())

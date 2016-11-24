@@ -21,12 +21,16 @@ def dispatch(request):
     except HTTPException as e:
         return e
     args['request']=request
+    _logger.debug('Incoming endpoint %s', endpoint)
     try:
         rep = dric.bus.publish(endpoint, **args)
     except HTTPException as e:
         return e
+    except Exception as e:
+        _logger.warn('Exception raised for endpoint %s: %s', endpoint, e)
     else:
         try:
             return rep[0]
         except TypeError:
+            _logger.warn('No response for endpoint "%s"', endpoint)
             return NotFound()

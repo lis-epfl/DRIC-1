@@ -23,7 +23,7 @@ def load_plugins(plugin_dirs=['core', 'plugins', 'samples']):
         sys.path.append(os.path.abspath(d))
 
     for plugin_dir in plugin_dirs:
-        print(plugin_dir)
+        _logger.debug('Opening plugin dir "%s"', plugin_dir)
         if(os.path.isdir(plugin_dir) is True):
             _load_plugins_in_dir(plugin_dir)
         else:
@@ -52,8 +52,13 @@ def _load_plugins_in_dir(dir):
             continue
         # load plugin.json
         with open(manifest_path) as manifest_file:
-            manifest = json.load(manifest_file)
-            _load_plugin(plugin_basedir, manifest)
+            try:
+                manifest = json.load(manifest_file)
+            except ValueError:
+                _logger.error('Invalid json in file plugin.json in directory %s', plugin_basedir)
+                raise
+            else:
+                _load_plugin(plugin_basedir, manifest)
 
 
 def _load_plugin(pdir, manifest):
@@ -74,9 +79,11 @@ def _load_plugin(pdir, manifest):
     if 'static_dirs' in manifest:
         _load_static_dirs(manifest['static_dirs'], pdir)
     
-    # attempt to load plugin as a package (Python>=3.4 only!)
+    # attempt to load plugin as a package
     name = os.path.basename(pdir)
+    _logger.info('Importing package "%s"', name)
     pck = import_module(name)
+    _logger.info('Package "%s" imported', name);
 
     #if 'load' in manifest:
     #    _load_files(pdir, manifest['load'], id)

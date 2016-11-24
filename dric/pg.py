@@ -29,7 +29,7 @@ def start_plugins():
     for name, plugin in iteritems(_plugins):
         try:
             _logger.info('setup %s', name)
-            _setup_plugin(plugin)
+            _setup_plugin(plugin, name)
         except:
             _logger.error("Unexpected error: %s", sys.exc_info()[0])
             raise
@@ -44,10 +44,14 @@ def start_plugins():
     # and started
     dric.bus.publish('dric.running')
     
-def _setup_plugin(plugin):
+def _setup_plugin(plugin, name):
     # All passes
     for pass_ in dric.get_pass_manager():
-        pass_.load(plugin)
+        try:
+            pass_.load(plugin, name)
+        except:
+            _logger.error("Unexpected error while applying pass %s on plugin %s: %s", pass_, name, sys.exc_info()[0])
+            raise
 
     plugin.setup(dric.bus)
 

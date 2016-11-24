@@ -14,10 +14,11 @@ A function decorator for datasources.
 
 _datasources = {}
 
-def _add_datasource(source_name, source):
+def add_datasource(source_name, source):
+    _logger.debug('Add source %s', source_name)
     _datasources[source_name] = source
 
-def _remove_datasource(source_name, source):
+def remove_datasource(source_name, source):
     _datasources[source_name] = source
 
 class DatasourceEndpoint(object):
@@ -29,7 +30,7 @@ class DatasourceEndpoint(object):
         return dict(_datasources)
 
 class DatasourcePass(dric.Pass):
-    def load(self, plugin):
+    def load(self, plugin, name):
         # Iterate over all class attributes
         for method_name in dir(plugin):
             method = getattr(plugin, method_name)
@@ -37,4 +38,4 @@ class DatasourcePass(dric.Pass):
                 if hasattr(method, 'datasource_name'):
                     source_name = getattr(method, 'datasource_name')
                     _logger.debug('Datasource %s found: %s', source_name, method)
-                    _add_datasource(source_name, method)
+                    add_datasource(source_name, method)

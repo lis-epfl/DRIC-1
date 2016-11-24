@@ -14,4 +14,4 @@ class WebpackWatchPlugin(dric.Plugin):
 
     def setup(self, eventbus):
         self.__logger.info('Start webpack --watch')
-        subprocess.Popen(['webpack', '--watch'], stdout=stdout, stderr=stdout, cwd=self.__cwd, shell=True)
+        #subprocess.Popen(['webpack', '--watch'], cwd=self.__cwd, shell=True)
