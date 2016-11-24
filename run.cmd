@@ -1,0 +1,2 @@
+@echo off
+cmd /k "cd /d "C:\Users\Arthur\Documents\Visual Studio 2015\Projects\WebProject1\WebProject1\env2\Scripts" & activate & cd /d    "C:\Users\Arthur\Documents\Visual Studio 2015\Projects\WebProject1\WebProject1" & python -m dric"

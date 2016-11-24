@@ -16,3 +16,5 @@ ptvs_virtualenv_proxy.py
 web.config
 web.debug.config
 DRIC.pyproj
+
+**/node_modules/**

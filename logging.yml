@@ -1,0 +1,35 @@
+version: 1
+formatters:
+  simple:
+    format: '[%(levelno)s] %(message)s (%(name)s)'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: simple
+    stream: ext://sys.stdout
+  noisyConsole:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: simple
+    stream: ext://sys.stdout
+loggers:
+  dric:
+    level: DEBUG
+    handlers: [noisyConsole]
+    propagate: no
+  dric.mavlink:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
+  dric.conversion:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
+  dric.server.eventlet:
+    level: DEBUG
+    handlers: [noisyConsole]
+    propagate: no
+root:
+  level: DEBUG
+  handlers: [console]
