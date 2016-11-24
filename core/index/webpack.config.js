@@ -6,11 +6,6 @@ module.exports = {
         path: './js',
         filename: 'box1.js'
     },
-    resolve: {
-        alias: {
-            'bootstrap-treeview': 'bootstrap-treeview/dist'
-        }
-    },
     module: {
         loaders: [{
             test: /\.js$/,

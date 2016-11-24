@@ -14,26 +14,14 @@
          folder instead of downloading all of them to reduce the load. -->
     <link rel="stylesheet" href="/css/skins/_all-skins.min.css">
 
+    <link rel="stylesheet" href="/content/core/index/css/flaticon.css" />
     <link rel="stylesheet" href="/content/core/index/adminlte_plugins/bootstrap-slider/slider.css" />
+    <link rel="stylesheet" href="/content/core/index/adminlte_plugins/datatables/jquery.dataTables.css" />
     <!-- common css-->
     <!--<link href="content/core/index/adminlte_plugins/select2/select2.min.css" rel="stylesheet">-->
     <style>
-        #thelast {
-            background-color: #ecf0f5;
-        }
-
-        #graph_box_body {
-            /*height: 400px;*/
-            /*-webkit-box-sizing: 400px;
-                -moz-box-sizing: 400px;
-                box-sizing: 400px;*/
-        }
-
-        #map {
-            width: 100%;
-            height: 300px;
-            margin-bottom: 15px;
-            border: 2px solid #fff;
+        [v-cloack]{
+            display: none;
         }
     </style>
 
@@ -48,6 +36,7 @@
     <script src="/content/core/index/lib/js/jquery-2.1.0.min.js"></script>
     <script src="/content/core/index/adminlte_plugins/jQueryUI/jquery-ui.min.js"></script>
     <script src="/content/core/index/lib/js/bootstrap.min.js"></script>
+    <script src="/content/core/index/adminlte_plugins/datatables/jquery.dataTables.min.js"></script>
     <script src="/content/core/index/adminlte_plugins/bootstrap-slider/bootstrap-slider.js"></script>
 
     <!-- Vue.js -->
@@ -75,9 +64,7 @@
 <body class="hold-transition skin-red sidebar-collapse sidebar-mini">
     <div class="wrapper">
         <header class="main-header">
-            <a href="/" class="logo">
-                <img src="/content/core/index/img/dric.png" style="height:50%;margin:auto;top:25%;position:relative;" class="logo-mini">
-            </a>
+            <dricoffline-logoindic></dricoffline-logoindic>
             <!--<nav class="navbar navbar-static-top" role="navigation">
                 <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
                     <span class="sr-only">Toggle navigation</span>
@@ -248,7 +235,7 @@
     <script src="/content/core/index/lib/js/mustache.min.js"></script>
 
 
-    <script src="/content/core/index/box.js"></script>
+    <script src="/content/core/index/js/box1.js"></script>
     <script type="text/javascript">
         $(function () {
             $(".connectedSortable").sortable({

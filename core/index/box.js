@@ -1,14 +1,13 @@
-//import "bootstrap-treeview/bootstrap-treeview.min.js";
+require('./js/ConnectionAlert.js')
 
-if (typeof dric === 'undefined') {
-    dric = new function () {
+if (typeof window.dric === 'undefined') {
+    window.dric = new function () {
         var listeners = [];
         var fired = [];
         this.ready = function (component, cb) {
             if (typeof cb === "undefined") {
                 fire_ready(component);
             } else {
-                console.log(component, fired);
                 if ($.inArray(component, fired) > -1) {
                     cb(component);
                 } else {
@@ -27,7 +26,6 @@ if (typeof dric === 'undefined') {
                 if (component in listeners) {
                     var cbs = listeners[component];
                     if (typeof cbs !== 'undefined') {
-                        console.log(typeof cbs);
                         for (var i = 0; i < cbs.length; i++) {
                             cbs[i](component);
                         }
@@ -40,7 +38,7 @@ if (typeof dric === 'undefined') {
 
 }
 
-dric.Box = function () {
+window.dric.Box = function () {
     var title = 'Untitled box';
     var closeable = false;
     var collapsable = false;
@@ -85,13 +83,12 @@ dric.Box = function () {
     };
 };
 
-dric.BoxManager = function (rowSelector) {
+window.dric.BoxManager = function (rowSelector) {
     var boxes = [];
 
     this.append = function (box, callback) {
         boxes.push(box);
 
-        console.log($('<div>', {class: 'col-md-12'}).html(box));
         box.renderInside($('<div>', {class: 'col-md-12'})
                 .appendTo(rowSelector), callback);
 
