@@ -11,11 +11,4 @@ dric.support.inject_content_scripts([{'path': '/content/plugins/charts/js/bundle
 
 
 if(dric.env == 'dev'):
-    _devlogger = getLogger('dric.charts.webpack')
-
-    class WebpackWatchPlugin(dric.Plugin):
-        def setup(self, eventbus):
-            cwd = dirname(realpath(__file__)) 
-            _devlogger.info('Start webpack --watch')
-            process = subprocess.Popen(['webpack', '--watch'], stdout=stdout, stderr=stdout, cwd=cwd, shell=True)
-    dric.register(__name__ + '/dev-webpack', WebpackWatchPlugin());
+    dric.register('charts/webpack-watch', dric.support.WebpackWatchPlugin(__file__, getLogger('dric.charts.webpack')))

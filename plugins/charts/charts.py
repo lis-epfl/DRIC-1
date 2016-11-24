@@ -1,4 +1,5 @@
 import dric
+import dric.support
 from random import random
 from eventlet import sleep, spawn
 from math import sin, cos, radians
@@ -24,6 +25,7 @@ class SampleChartPlugin(dric.Plugin):
                 yield sin(radians(i))
     sin_datasource.isTimeSerie = True
 
+    @dric.support.datasource.noplot(False)
     @dric.datasource('SamplesTrig/cos')
     def cos_datasource(self):
         while True:

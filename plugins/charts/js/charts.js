@@ -21,6 +21,7 @@ function samplesCharts() {
                 plotRegistry.update(this.selection);
             };
             plotRegistry.colorProvider = observableTree;
+            plotRegistry.clear = observableTree.clear;
         });
     });
 }

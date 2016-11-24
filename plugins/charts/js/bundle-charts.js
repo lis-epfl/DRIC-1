@@ -60,13 +60,14 @@
 	            var Plot = __webpack_require__(2);
 	            var plotRegistry = Plot.make('#samples-chart');
 
-	            var Tree = __webpack_require__(31);
+	            var Tree = __webpack_require__(32);
 	            var observableTree = Tree.make('.chart-source-tree');
 
 	            observableTree.onchange = function () {
 	                plotRegistry.update(this.selection);
 	            };
 	            plotRegistry.colorProvider = observableTree;
+	            plotRegistry.clear = observableTree.clear;
 	        });
 	    });
 	}
@@ -86,9 +87,14 @@
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
 	    var ControllableAxis = __webpack_require__(3);
-	    var randomstring = __webpack_require__(4);
+	    var FixedLengthAxis = __webpack_require__(4);
+	    var randomstring = __webpack_require__(5);
 	    var self = {};
 	    var sid = randomstring.generate();
+	    var WebSocketDatasource = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"websocketdatasource\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+
+
+	    var maxTime = 0;
 
 	    function PlotRegistry() {
 	        var host = window.location.host;
@@ -99,7 +105,7 @@
 	        var self = this;
 
 	        this.colorProvider = null;
-	        this.visiblePoints = 300;
+	        this.visiblePoints = 3000;
 	        this.offset = 0;
 
 	        this.getColors = function () {
@@ -111,7 +117,6 @@
 	                    }
 	                    colorsValid = true;
 	                }
-	                console.log(colors);
 	            }
 	            return colors;
 	        }
@@ -145,7 +150,6 @@
 	                forcedStart[i] = {};
 	                forcedStart[i].start = Math.max(res.length - self.visiblePoints - self.offset, 0);
 	                forcedStart[i].end = Math.min(forcedStart[i].start + self.visiblePoints, res.length);
-	                console.log('**************************', forcedStart[i]);
 	                i++;
 	            }
 	            return forcedStart;
@@ -158,7 +162,6 @@
 	                var res = sources[source].res;
 	                var start = Math.max((typeof forced === 'undefined' ? Math.max(res.length - self.visiblePoints, 0) : forced[i].start) - self.offset, 0);
 	                var end = Math.min(typeof forced === 'undefined' ? (start + self.visiblePoints) : forced[i].end - self.offset, res.length, res.length);
-	                console.log((typeof forced === 'undefined' ?'' :forced[i].start));
 	                data.push(res.slice(start, end));
 	                i++;
 	            }
@@ -178,7 +181,7 @@
 	        open_socket();
 
 	        function open_socket() {
-	            socket = new WebSocket(url);
+	            socket = new WebSocketDatasource(url);
 	            socket.onmessage = recv;
 	            socket.onopen = request;
 	            socket.binaryType = 'arraybuffer';
@@ -189,6 +192,9 @@
 	            for (var i = 0; i < view.byteLength; i += 16) {
 	                var time = view.getFloat64(i);
 	                var mag = view.getFloat64(i + 8);
+	                if (time > maxTime) {
+	                    maxTime = time;
+	                }
 	                update(time, mag);
 	            }
 	            //var filereader = new FileReader();
@@ -217,12 +223,11 @@
 	            socket.close();
 	        }
 	    }
-
 	    self.make = function (selector) {
 	        var plotRegistry = new PlotRegistry();
 	        var options = {
-	            yaxis: new ControllableAxis(1.5, -1.5, function () { return plot !== null ? plot.getYAxes()[0] : { min: 0, max: 0 }; }),
-	            xaxis: new ControllableAxis(null, null, function () { return plot !== null ? plot.getXAxes()[0] : { min: 0, max: 0 }; })
+	            yaxis: new ControllableAxis(1.5, -1.5, function () { return plot ? plot.getYAxes()[0] : { min: 0, max: 0 }; }),
+	            xaxis: new FixedLengthAxis(function () { return vappCharts ? vappCharts.xaxis : 0; }, function () { return maxTime; })
 	        };
 
 
@@ -261,7 +266,6 @@
 	        var pauseStart;
 	        function redraw() {
 	            var plotdata;
-	            var xrange;
 
 	            if (paused) {
 	                plotdata = plotRegistry._plotdata(pauseStart);
@@ -269,8 +273,7 @@
 	                plotdata = plotRegistry._plotdata();
 	            }
 
-	            xrange = rangeOf(plotdata, 0);
-	            //options.xaxis._d.force(xrange.min, xrange.max);
+	            options.xaxis.update();
 	            options.colors = plotRegistry.getColors();
 
 	            plot = $.plot($(selector), plotdata, options);
@@ -288,23 +291,12 @@
 	            pauseStart = plotRegistry._pause_start();
 	        }
 
-	        var lastxdrag = null;
-	        function xmousedrag(e) {
-	            if (lastxdrag === null) {
-	                lastxdrag = { x: e.x, y: e.y };
-	                return;
-	            }
-
-	            var delta = (e.x - lastxdrag.x) * 0.01;
-	            plotRegistry.offset = Math.max(plotRegistry.offset + delta, 0);
-	            console.debug(plotRegistry.offset);
-	        }
-
 	        var vappCharts = new Vue({
 	            el: '#vapp-charts',
 	            data: {
 	                cursor: 'default',
-	                mousedown: false
+	                mousedown: false,
+	                xaxis: 60
 	            },
 	            methods: {
 	                pause: function (e) {
@@ -316,7 +308,6 @@
 	                    if (this.mouseButtonDown) {
 	                        this.cursor = 'all-scroll';
 	                        options.yaxis._d.pan.mousedrag(e);
-	                        xmousedrag(e);
 	                    } else {
 	                        this.cursor = 'default';
 	                    }
@@ -329,8 +320,8 @@
 	                mouseup: function (e) {
 	                    e.preventDefault(); this.mouseButtonDown = false;
 	                    options.yaxis._d.pan.mousedragstop();
-	                    lastxdrag = null;
-	                }
+	                },
+	                clear: function () { plotRegistry.clear(); }
 	            }
 	        });
 
@@ -425,16 +416,41 @@
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(5);
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+
+	    var FixedLengthAxis = function (lengthProvider, maxProvider) {
+	        this.mode = 'time';
+	        this.minTickSize = [1, 'second'];
+	        this.tickSize = [5, 'second'];
+
+	        this.update = function() {
+	            var max = maxProvider();
+	            var length = lengthProvider();
+
+	            this.max = max;
+	            this.min = max - length;
+
+	        }
+	        this.update();
+	    };
+
+	    return FixedLengthAxis;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
+	module.exports = __webpack_require__(6);
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
 	"use strict";
 
-	var crypto  = __webpack_require__(6);
-	var Charset = __webpack_require__(29);
+	var crypto  = __webpack_require__(7);
+	var Charset = __webpack_require__(30);
 
 	function safeRandomBytes(length) {
 	  while (true) {
@@ -501,10 +517,10 @@
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(11)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(12)
 
 	function error () {
 	  var m = [].slice.call(arguments).join(' ')
@@ -515,9 +531,9 @@
 	    ].join('\n'))
 	}
 
-	exports.createHash = __webpack_require__(13)
+	exports.createHash = __webpack_require__(14)
 
-	exports.createHmac = __webpack_require__(26)
+	exports.createHmac = __webpack_require__(27)
 
 	exports.randomBytes = function(size, callback) {
 	  if (callback && callback.call) {
@@ -538,7 +554,7 @@
 	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
 	}
 
-	var p = __webpack_require__(27)(exports)
+	var p = __webpack_require__(28)(exports)
 	exports.pbkdf2 = p.pbkdf2
 	exports.pbkdf2Sync = p.pbkdf2Sync
 
@@ -558,10 +574,10 @@
 	  }
 	})
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8).Buffer))
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer, global) {/*!
@@ -574,9 +590,9 @@
 
 	'use strict'
 
-	var base64 = __webpack_require__(8)
-	var ieee754 = __webpack_require__(9)
-	var isArray = __webpack_require__(10)
+	var base64 = __webpack_require__(9)
+	var ieee754 = __webpack_require__(10)
+	var isArray = __webpack_require__(11)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -2354,10 +2370,10 @@
 	  return val !== val // eslint-disable-line no-self-compare
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7).Buffer, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8).Buffer, (function() { return this; }())))
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -2477,7 +2493,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -2567,7 +2583,7 @@
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -2578,13 +2594,13 @@
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
 	  var g = ('undefined' === typeof window ? global : window) || {}
 	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(12)
+	    g.crypto || g.msCrypto || __webpack_require__(13)
 	  )
 	  module.exports = function(size) {
 	    // Modern Browsers
@@ -2608,22 +2624,22 @@
 	  }
 	}())
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(7).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(8).Buffer))
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(14)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(15)
 
-	var md5 = toConstructor(__webpack_require__(23))
-	var rmd160 = toConstructor(__webpack_require__(25))
+	var md5 = toConstructor(__webpack_require__(24))
+	var rmd160 = toConstructor(__webpack_require__(26))
 
 	function toConstructor (fn) {
 	  return function () {
@@ -2651,10 +2667,10 @@
 	  return createHash(alg)
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8).Buffer))
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function (alg) {
@@ -2663,16 +2679,16 @@
 	  return new Alg()
 	}
 
-	var Buffer = __webpack_require__(7).Buffer
-	var Hash   = __webpack_require__(15)(Buffer)
+	var Buffer = __webpack_require__(8).Buffer
+	var Hash   = __webpack_require__(16)(Buffer)
 
-	exports.sha1 = __webpack_require__(16)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(21)(Buffer, Hash)
-	exports.sha512 = __webpack_require__(22)(Buffer, Hash)
+	exports.sha1 = __webpack_require__(17)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(22)(Buffer, Hash)
+	exports.sha512 = __webpack_require__(23)(Buffer, Hash)
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports) {
 
 	module.exports = function (Buffer) {
@@ -2755,7 +2771,7 @@
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -2767,7 +2783,7 @@
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(17).inherits
+	var inherits = __webpack_require__(18).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -2899,7 +2915,7 @@
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -3427,7 +3443,7 @@
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(19);
+	exports.isBuffer = __webpack_require__(20);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -3471,7 +3487,7 @@
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(20);
+	exports.inherits = __webpack_require__(21);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -3489,10 +3505,10 @@
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(18)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(19)))
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -3678,7 +3694,7 @@
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -3689,7 +3705,7 @@
 	}
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -3718,7 +3734,7 @@
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -3730,7 +3746,7 @@
 	 *
 	 */
 
-	var inherits = __webpack_require__(17).inherits
+	var inherits = __webpack_require__(18).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -3871,10 +3887,10 @@
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(17).inherits
+	var inherits = __webpack_require__(18).inherits
 
 	module.exports = function (Buffer, Hash) {
 	  var K = [
@@ -4121,7 +4137,7 @@
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -4133,7 +4149,7 @@
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(24);
+	var helpers = __webpack_require__(25);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -4282,7 +4298,7 @@
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
@@ -4320,10 +4336,10 @@
 
 	module.exports = { hash: hash };
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8).Buffer))
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -4532,13 +4548,13 @@
 
 
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8).Buffer))
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(13)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(14)
 
 	var zeroBuffer = new Buffer(128)
 	zeroBuffer.fill(0)
@@ -4582,13 +4598,13 @@
 	}
 
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8).Buffer))
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var pbkdf2Export = __webpack_require__(28)
+	var pbkdf2Export = __webpack_require__(29)
 
 	module.exports = function (crypto, exports) {
 	  exports = exports || {}
@@ -4603,7 +4619,7 @@
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function(crypto) {
@@ -4691,13 +4707,13 @@
 	  }
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8).Buffer))
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayUniq = __webpack_require__(30);
+	var arrayUniq = __webpack_require__(31);
 
 	function Charset() {
 	  this.chars = '';
@@ -4753,7 +4769,7 @@
 	module.exports = exports = Charset;
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -4820,34 +4836,37 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
-	    var ColorHelper = __webpack_require__(32);
+	    var ColorHelper = __webpack_require__(33);
+	    __webpack_require__(34);
 	    var self = {};
 
 	    function downloadDatasourcesList(loaded) {
 	        $.getJSON('/dsws_datasources', loaded);
 	    }
 
+	    function fireChange(selector, observableTree) {
+	        var $tree = $(selector);
+	        if (typeof observableTree.onchange == 'function') {
+	            observableTree.selection = $tree.treeview('getSelected').map(function (node) {
+	                return node.source;
+	            });
+	            observableTree.onchange.call(observableTree);
+	        }
+	    }
+
+
 	    function makeFromData(selector, list, observableTree) {
 	        var $tree = $(selector);
 	        var data = formatData(list);
 
-	        function fireChange() {
-	            if (typeof observableTree.onchange == 'function') {
-	                observableTree.selection = $tree.treeview('getSelected').map(function (node) {
-	                    return node.source;
-	                });
-	                observableTree.onchange.call(observableTree);
-	            }
-	        }
-
 	        $tree.treeview({
 	            data: data,
 	            collapseIcon: "fa fa-chevron-down",
-	            expandIcon: "fa fa-chevron-right",
+	            expandIcon: "fa fa-chevron-right", 
 	            emptyIcon: "fa",
 	            showBorder: false,
 	            onhoverColor: "#d9d9d9",
@@ -4856,32 +4875,72 @@
 	        $tree
 	            .on('nodeSelected', function (event, node) {
 	                node.$el.css('background', ColorHelper.nextColor());
-	                fireChange();
+	                fireChange(selector, observableTree);
 	            })
 	            .on('nodeUnselected', function (event, node) {
 	                node.$el.css('background', '');
-	                fireChange();
+	                fireChange(selector, observableTree);
 	            });
 
 	        observableTree.getColorForSource = function (source) {
-	                console.log("_>", source);
 	                var selected = $tree.treeview('getSelected');
 	                for (var i = 0; i < selected.length; i++) {
-	                    console.log("%s == %s", selected[i].source, source);
 	                    if (selected[i].source === source) {
 	                        return selected[i].$el.css('background-color');
 	                    }
 	                }
 	            
 	        };
+	        $tree.treeview('collapseAll', { silent: true });
+	    }
+
+	    function clear(selector) {
+	        var $tree = $(selector);
+	        var selected = $tree.treeview('getSelected');
+	        for (var i = 0; i < selected.length; i++) {
+	            $tree.treeview('unselectNode', selected[i]);
+	        }
 	    }
 
 	    self.make = function (selector) {
 	        var observableTree = {
 	            onchange: null,
 	            selection: null,
-	            colorProvider: null
+	            colorProvider: null,
+	            clear: function () { clear(selector); }
 	        };
+
+	        $('.refresh-chart-source-tree-button').on('click', function () {
+	            downloadDatasourcesList(function (json) {
+	                makeFromData(selector, json, observableTree);
+	                fireChange(selector, observableTree);
+	            });
+	        });
+	        $('.search-chart-source-tree').on('keyup', function () {
+	            var $searchinput = $('.search-chart-source-tree');
+	            var $tree = $(selector);
+
+	            var query = $searchinput.val();
+	            
+	            $tree.treeview('clearSearch');
+	            $tree.treeview('collapseAll', { silent: true });
+	            if (query.length > 0) {
+	                $tree.treeview('search', query);
+	                $tree.find('.node-:not(.node-result)').css('display', 'none');
+	                $tree.find('.node-.node-result')
+	                    .css('display', '')
+	                    .each(function (i, e) {
+	                        var nodeId = $(e).attr('data-nodeid');
+	                        $tree.find('.node-').filter(function () {
+	                            var id = $(this).attr('data-nodeid');
+	                            return nodeId.startsWith(id + '.') || id.startsWith(nodeId + '.');
+	                        }).css('display', '');
+	                    });
+	            } else {
+	                $tree.find('.node-').css('display', '');
+	            }
+	        });
+
 	        downloadDatasourcesList(function (json) {
 	            makeFromData(selector, json, observableTree);
 	        });
@@ -4891,6 +4950,8 @@
 	    function formatData(list) {
 	        var data = [];
 	        var groups = {};
+
+	        
 
 	        // First, group sources by category
 	        for (var i = 0; i < list.length; i++) {
@@ -4926,7 +4987,7 @@
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
@@ -4957,6 +5018,67 @@
 
 	    return self;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 34 */
+/***/ function(module, exports) {
+
+	/*! http://mths.be/startswith v0.2.0 by @mathias */
+	if (!String.prototype.startsWith) {
+		(function() {
+			'use strict'; // needed to support `apply`/`call` with `undefined`/`null`
+			var defineProperty = (function() {
+				// IE 8 only supports `Object.defineProperty` on DOM elements
+				try {
+					var object = {};
+					var $defineProperty = Object.defineProperty;
+					var result = $defineProperty(object, object, object) && $defineProperty;
+				} catch(error) {}
+				return result;
+			}());
+			var toString = {}.toString;
+			var startsWith = function(search) {
+				if (this == null) {
+					throw TypeError();
+				}
+				var string = String(this);
+				if (search && toString.call(search) == '[object RegExp]') {
+					throw TypeError();
+				}
+				var stringLength = string.length;
+				var searchString = String(search);
+				var searchLength = searchString.length;
+				var position = arguments.length > 1 ? arguments[1] : undefined;
+				// `ToInteger`
+				var pos = position ? Number(position) : 0;
+				if (pos != pos) { // better `isNaN`
+					pos = 0;
+				}
+				var start = Math.min(Math.max(pos, 0), stringLength);
+				// Avoid the `indexOf` call if no match is possible
+				if (searchLength + start > stringLength) {
+					return false;
+				}
+				var index = -1;
+				while (++index < searchLength) {
+					if (string.charCodeAt(start + index) != searchString.charCodeAt(index)) {
+						return false;
+					}
+				}
+				return true;
+			};
+			if (defineProperty) {
+				defineProperty(String.prototype, 'startsWith', {
+					'value': startsWith,
+					'configurable': true,
+					'writable': true
+				});
+			} else {
+				String.prototype.startsWith = startsWith;
+			}
+		}());
+	}
+
 
 /***/ }
 /******/ ]);

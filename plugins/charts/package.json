@@ -14,6 +14,8 @@
   "dependencies": {
     "bootstrap-treeview": "git://github.com/Arth-ur/bootstrap-treeview.git#develop",
     "jquery": "^3.1.1",
-    "randomstring": "^1.1.5"
+    "randomstring": "^1.1.5",
+    "string.prototype.startswith": "^0.2.0",
+    "websocket-datasource": "arth-ur/websocket-datasource#v1.0"
   }
 }

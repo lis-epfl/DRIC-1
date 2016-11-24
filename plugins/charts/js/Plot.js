@@ -1,8 +1,13 @@
 ﻿define(function () {
     var ControllableAxis = require('ControllableAxis');
+    var FixedLengthAxis = require('FixedLengthAxis');
     var randomstring = require('randomstring');
     var self = {};
     var sid = randomstring.generate();
+    var WebSocketDatasource = require('websocketdatasource');
+
+
+    var maxTime = 0;
 
     function PlotRegistry() {
         var host = window.location.host;
@@ -13,7 +18,7 @@
         var self = this;
 
         this.colorProvider = null;
-        this.visiblePoints = 300;
+        this.visiblePoints = 3000;
         this.offset = 0;
 
         this.getColors = function () {
@@ -25,7 +30,6 @@
                     }
                     colorsValid = true;
                 }
-                console.log(colors);
             }
             return colors;
         }
@@ -59,7 +63,6 @@
                 forcedStart[i] = {};
                 forcedStart[i].start = Math.max(res.length - self.visiblePoints - self.offset, 0);
                 forcedStart[i].end = Math.min(forcedStart[i].start + self.visiblePoints, res.length);
-                console.log('**************************', forcedStart[i]);
                 i++;
             }
             return forcedStart;
@@ -72,7 +75,6 @@
                 var res = sources[source].res;
                 var start = Math.max((typeof forced === 'undefined' ? Math.max(res.length - self.visiblePoints, 0) : forced[i].start) - self.offset, 0);
                 var end = Math.min(typeof forced === 'undefined' ? (start + self.visiblePoints) : forced[i].end - self.offset, res.length, res.length);
-                console.log((typeof forced === 'undefined' ?'' :forced[i].start));
                 data.push(res.slice(start, end));
                 i++;
             }
@@ -92,7 +94,7 @@
         open_socket();
 
         function open_socket() {
-            socket = new WebSocket(url);
+            socket = new WebSocketDatasource(url);
             socket.onmessage = recv;
             socket.onopen = request;
             socket.binaryType = 'arraybuffer';
@@ -103,6 +105,9 @@
             for (var i = 0; i < view.byteLength; i += 16) {
                 var time = view.getFloat64(i);
                 var mag = view.getFloat64(i + 8);
+                if (time > maxTime) {
+                    maxTime = time;
+                }
                 update(time, mag);
             }
             //var filereader = new FileReader();
@@ -131,12 +136,11 @@
             socket.close();
         }
     }
-
     self.make = function (selector) {
         var plotRegistry = new PlotRegistry();
         var options = {
-            yaxis: new ControllableAxis(1.5, -1.5, function () { return plot !== null ? plot.getYAxes()[0] : { min: 0, max: 0 }; }),
-            xaxis: new ControllableAxis(null, null, function () { return plot !== null ? plot.getXAxes()[0] : { min: 0, max: 0 }; })
+            yaxis: new ControllableAxis(1.5, -1.5, function () { return plot ? plot.getYAxes()[0] : { min: 0, max: 0 }; }),
+            xaxis: new FixedLengthAxis(function () { return vappCharts ? vappCharts.xaxis : 0; }, function () { return maxTime; })
         };
 
 
@@ -175,7 +179,6 @@
         var pauseStart;
         function redraw() {
             var plotdata;
-            var xrange;
 
             if (paused) {
                 plotdata = plotRegistry._plotdata(pauseStart);
@@ -183,8 +186,7 @@
                 plotdata = plotRegistry._plotdata();
             }
 
-            xrange = rangeOf(plotdata, 0);
-            //options.xaxis._d.force(xrange.min, xrange.max);
+            options.xaxis.update();
             options.colors = plotRegistry.getColors();
 
             plot = $.plot($(selector), plotdata, options);
@@ -200,18 +202,6 @@
                 pauseData.push(data[i].slice(0));
             }
             pauseStart = plotRegistry._pause_start();
-        }
-
-        var lastxdrag = null;
-        function xmousedrag(e) {
-            if (lastxdrag === null) {
-                lastxdrag = { x: e.x, y: e.y };
-                return;
-            }
-
-            var delta = (e.x - lastxdrag.x) * 0.01;
-            plotRegistry.offset = Math.max(plotRegistry.offset + delta, 0);
-            console.debug(plotRegistry.offset);
         }
 
         var vappCharts = new Vue({
@@ -231,7 +221,6 @@
                     if (this.mouseButtonDown) {
                         this.cursor = 'all-scroll';
                         options.yaxis._d.pan.mousedrag(e);
-                        xmousedrag(e);
                     } else {
                         this.cursor = 'default';
                     }
@@ -244,7 +233,6 @@
                 mouseup: function (e) {
                     e.preventDefault(); this.mouseButtonDown = false;
                     options.yaxis._d.pan.mousedragstop();
-                    lastxdrag = null;
                 },
                 clear: function () { plotRegistry.clear(); }
             }
