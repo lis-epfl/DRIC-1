@@ -1,0 +1,7 @@
+{
+    "manifest-version": 1.0,
+    "name": "mavric",
+    "id": "mavric",
+    "description": "mavric binding",
+    "author": "Arthur Gay"
+}
