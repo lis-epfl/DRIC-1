@@ -1,0 +1,15 @@
+{
+  "name": "driconx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/driconx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Arthur Gay",
+  "license": "ISC",
+  "dependencies": {
+    "vue": "^2.0.7",
+    "websocket.js": "^0.1.6"
+  }
+}

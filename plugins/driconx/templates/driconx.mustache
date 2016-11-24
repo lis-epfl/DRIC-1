@@ -1,0 +1,99 @@
+<section class="content body page" id="page-connections" style="display: none;">
+    <section class="content-header">
+        <h1>
+            Connections
+        </h1>
+    </section>
+    <section class="content">
+        <div class="callout callout-danger" v-if="!connected">
+            <h4><i class="fa fa-exclamation-triangle fa-fw"></i> <tt>driconx</tt> disconnected!</h4>
+            Reload the page to try to reconnect to the <tt>driconx</tt> websocket.
+        </div>
+        <div class="callout callout-danger" v-if="bindings.length == 0">
+            <h4><i class="fa fa-ban fa-fw"></i> No registered bindings</h4>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <form class="connection form-inline">
+
+                    <div class="form-group">
+                        <label for="connectionType">Connection type: </label>
+                        <select class="form-control" v-model="newConnection.type" name="connectionType" required>
+                            <option>UDP</option>
+                            <option>TCP</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="host">Host: </label>
+                        <input type="text" class="form-control" v-model="newConnection.host" name="host" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="port">Port: </label>
+                        <input type="text" class="form-control" v-model="newConnection.port" name="port" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="binding">Binding: </label>
+                        <select class="form-control" v-model="newConnection.binding" name="binding" v-bind:disabled="newConnection.multibinding" required>
+                            <option v-for="binding in bindings">{{binding}}</option>
+                        </select>
+                    </div>
+
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" v-model="newConnection.multibinding" name="multibinding" disabled />
+                            Multi-binding connection
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-success" v-on:click="add">Add</button>
+
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" v-model="active_only" name="active_only" />
+                            Show active connections only
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-md-4" v-for="conx in connections">
+                <div class="box" 
+                     v-bind:class="conx.connecting?'box-warning':(conx.connected?'box-success':'box-danger')"
+                     v-if="!active_only || conx.connecting || conx.connected">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            {{conx.type}}://{{conx.host}}:{{conx.port}}
+                            <span class="small">[{{conx.binding}}]</span>
+                        </h3>
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-box-tool" v-if="!conx.connecting && !conx.connected" v-on:click="deleteConnection(conx)">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <p><b>{{typeof conx.systems === 'undefined' ? 'No' : conx.systems.length}}</b> systems connected: </p>
+                        <ul v-if="typeof conx.systems !== 'undefined'">
+                            <li v-for="systemid in conx.systems"><a href="#">{{systemid}}</a></li>
+                        </ul>
+                    </div>
+                    <div class="box-header with-border">
+                        <button type="button" class="btn btn-danger" v-on:click="disconnect(conx)" v-if="conx.connected">
+                            Disconnect
+                        </button>
+                        <button type="button" class="btn btn-success" v-on:click="connect(conx)" v-bind:disabled="conx.connecting" v-else>
+                            Connect
+                        </button>
+                        <i class="fa fa-cog fa-spin" v-if="conx.connecting"></i>
+                        <span class="text-muted">{{conx.status}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
