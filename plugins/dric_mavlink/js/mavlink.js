@@ -52,32 +52,41 @@
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
 	    var MessageStats = __webpack_require__(2);
-	    var MessagesList = __webpack_require__(19);
-	    var debounce = __webpack_require__(21);
-	    var JSON5 = __webpack_require__(23);
+	    var MessagesList = __webpack_require__(20);
+	    var BatteryStats = __webpack_require__(22);
+	    var Heartbeat = __webpack_require__(23);
+	    var MavErrorMonitor = __webpack_require__(24);
+	    var ESIDListManager = __webpack_require__(28);
+	    var debounce = __webpack_require__(25);
+	    var JSON5 = __webpack_require__(27);
 
-	    var getMessage = debounce(function (type, n, message) {
-	        $.get('/mavlink/message/' + type + '/' + n, function (data) {
-	            message.data = JSON5.parse(data);
-	        });
-	    }, 500);
+	    var UNITS = {}, units = {};
+	    $.getJSON('/mavlink/units', function (distunits) {
+	        $.extend(true, UNITS, distunits);
+	        $.extend(true, units, distunits);
+	    });
 
 	    $.get('/content/plugins/dric_mavlink/templates/menuitem_mavlink.mustache', function (template) {
 	        $('.sidebar-menu').append(template);
 	    });
 
+	    var batteryStats, heartbeat, mavErrorMonitor, eSIDListManager;    
+
 	    $.get('/content/plugins/dric_mavlink/templates/cmdsend.mustache', function (template) {
 	        $('.content-wrapper').append(template);
-	        vapp = new Vue({
+	        var vapp = new Vue({
 	            el: '#page-mavlink',
 	            data: {
+	                esidList: [],
+	                esid: null,
+	                searchquery: '',
 	                stats: {
 	                    rate: 0,
 	                    progress: 0,
 	                    total: 0
 	                },
 	                heartbeat: {
-	                    frequency: 0,
+	                    status: 'UNDEFINED',
 	                    last: 0,
 	                },
 	                battery: {
@@ -87,9 +96,58 @@
 	                },
 	                activeType: '',
 	                messages: [],
-	                inspectedMessages: {}
+	                inspectedMessages: {},
+	                units: units,
+	                acquisition: 'boot',
+	                acquisitionIndex: {},
+	                maverrors: []
+	            },
+	            watch: {
+	                esid: function (newesid) {
+	                    MessagesList.updateESID(newesid);
+	                    MessageStats.updateESID(newesid);
+	                    batteryStats.updateESID(newesid);
+	                }
 	            },
 	            methods: {
+	                setAcquisitionFrom(when) {
+	                    this.acquisitionIndex = {};
+	                    switch (when) {
+	                        case 'now':
+	                            for (var i = 0; i < this.messages.length; i++) {
+	                                this.acquisitionIndex[this.messages[i].type] = this.messages[i].count;
+	                            }
+	                            break;
+	                    }
+	                },
+	                getQuantityFor(unit) {
+	                    for (q in Conversion.quantities) {
+	                        if (Conversion.quantities[q].indexOf(unit) >= 0) {
+	                            return q;
+	                        }
+	                    }
+	                    return null;
+	                },
+	                getConvertableUnitsFor(unit) {
+	                    var quantity = this.getQuantityFor(unit);
+	                    if (quantity === null) {
+	                        return null;
+	                    } else {
+	                        switch (quantity) {
+	                            case 'length': return ['nm', 'um', 'mm', 'cm', 'm', 'km'];
+	                            case 'temperature': return ['�C', '�F'];
+	                        }
+	                    }
+	                },
+	                convertMavlink: function (type, key, value) {
+	                    if (type in UNITS && key in UNITS[type] && type in this.units && key in this.units[type]) {
+	                        var from = UNITS[type][key];
+	                        var to = this.units[type][key];
+	                        return Conversion.convert(from, to, value);
+	                    } else {
+	                        return value;
+	                    }
+	                },
 	                openMavlinkMsg: function (e) {
 	                    var $target = $(e.target);
 	                    var type = $target.attr('data-message-type');
@@ -102,7 +160,6 @@
 
 	                    this.inspectedMessages[type].unwatch = this.$watch('inspectedMessages.' + type + '.current',
 	                        function (newValue, oldValue) {
-	                            console.log(this.activeType, type, type === this.activeType);
 	                            if (type === this.activeType) {
 	                                getMessage(type, newValue, this.inspectedMessages[type]);
 	                            }
@@ -116,6 +173,17 @@
 	                }
 	            }
 	        });
+
+	        var getMessage = debounce(function (type, n, message) {
+	            $.get('/mavlink/message/' + vapp.esid + '/' + type + '/' + n, function (data) {
+	                message.data = JSON.parse(data);
+	            });
+	        }, 500);
+
+	        batteryStats = new BatteryStats(vapp.battery);
+	        heartbeat = new Heartbeat(vapp.heartbeat);
+	        mavErrorMonitor = new MavErrorMonitor(vapp.maverrors);
+	        eSIDListManager = new ESIDListManager(vapp.esidList);
 
 	        MessageStats.onUpdate = function (stats) {
 	            vapp.stats = stats;
@@ -143,45 +211,50 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
-	    var WebSocketClient = __webpack_require__(3).default;
-	    var CircularBuffer = __webpack_require__(18);
+	    var WebSocketDatasource = __webpack_require__(3);
+	    var CircularBuffer = __webpack_require__(19);
 
 	    var observable = {
-	        onUpdate: null
-	    };
-
-	    var messagesCountWs = new WebSocketClient('ws://' + window.location.host + '/datasource?s=mavlink/messages_count', undefined, { strategy: 'exponential' });
-
-	    var last = -1;
-	    var diffBuffer = new CircularBuffer(5);
-
-
-	    
-	    messagesCountWs.onopen = function () {
-	        messagesCountWs.binaryType = 'arraybuffer';
-	    }
-	    messagesCountWs.onmessage = function (m) {
-	        var view = new DataView(m.data);
-	        var time = view.getFloat64(0);
-	        var count = view.getFloat64(8);
-
-
-	        var diff = count - last;
-	        diffBuffer.enq({ time: time, diff: diff, count: count });
-	        last = count;
-	        var from = diffBuffer.get(diffBuffer.size() - 1);
-	        var to = diffBuffer.get(0);
-	        var rate = Math.round((to.count - from.count) / (to.time - from.time));
-
-	        if (typeof observable.onUpdate === 'function') {
-	            observable.onUpdate({
-	                rate: rate,
-	                total: count,
-	                progress: rate
-	            });
+	        onUpdate: null,
+	        updateESID: function (newesid) {
+	            esid = newesid;
+	            update(esid);
 	        }
 	    };
 
+	    function update(esid) {
+	        var messagesCountWs = new WebSocketDatasource('ws://' + window.location.host + '/datasource?s=mavlink/messages_count$' + esid, undefined, { strategy: 'exponential' });
+
+	        var last = -1;
+	        var diffBuffer = new CircularBuffer(5);
+
+
+
+	        messagesCountWs.onopen = function () {
+	            messagesCountWs.binaryType = 'arraybuffer';
+	        }
+	        messagesCountWs.onmessage = function (m) {
+	            var view = new DataView(m.data);
+	            var time = view.getFloat64(0);
+	            var count = view.getFloat64(8);
+
+
+	            var diff = count - last;
+	            diffBuffer.enq({ time: time, diff: diff, count: count });
+	            last = count;
+	            var from = diffBuffer.get(diffBuffer.size() - 1);
+	            var to = diffBuffer.get(0);
+	            var rate = Math.round((to.count - from.count) / (to.time - from.time));
+
+	            if (typeof observable.onUpdate === 'function') {
+	                observable.onUpdate({
+	                    rate: rate,
+	                    total: count,
+	                    progress: rate
+	                });
+	            }
+	        };
+	    }
 	    return observable;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
@@ -189,7 +262,61 @@
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';Object.defineProperty(exports,"__esModule",{value:true});var _createClass=function(){function defineProperties(target,props){for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if("value" in descriptor)descriptor.writable=true;Object.defineProperty(target,descriptor.key,descriptor);}}return function(Constructor,protoProps,staticProps){if(protoProps)defineProperties(Constructor.prototype,protoProps);if(staticProps)defineProperties(Constructor,staticProps);return Constructor;};}();function _classCallCheck(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError("Cannot call a class as a function");}}var backoff=__webpack_require__(4);var WebSocketClient=function(){ /**
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(){
+	    var WebSocketDatasource = function(url){
+	        var WebSocketClient = __webpack_require__(4).default;
+	        var self = this;
+
+	        this.status = 0;
+	        this.datasourceStatus = -1;
+
+	        function onmessage(m) {
+	            if (self.status === 0) {
+	                var view = new DataView(m.data);
+	                self.datasourceStatus = view.getInt32(0);
+	                console.log(self.datasourceStatus);
+	                self.status = 1;
+	                Object.apply(self, self.onDatasourceStatusChanged);
+	                
+	                switch (self.datasourceStatus) {
+	                    case 404:
+	                        ws.close();
+	                        break;
+	                    case 200:
+	                        break;
+	                    default:
+	                        console.error('unknwon datasource status code ' + self.datasourceStatus + ' for url ' + url);
+	                        ws.close();
+	                        break;
+	                }
+	            } else {
+	                self.onmessage(m);
+	            }
+	        };
+
+
+	        this.onmessage = function (m) { };
+	        this.onclose = function () { };
+	        this.onopen = function () { };
+	        this.onDatasourceStatusChanged = function () { };
+
+	        var ws = new WebSocketClient(url, 'datasource', { strategy: "exponential" });
+
+	        ws.onopen = function () { ws.binaryType = 'arraybuffer'; self.onopen();};
+	        ws.onmessage = onmessage;
+	        ws.onclose = function () { self.onclose() };
+
+	        this.close = ws.close;
+	    };
+	    return WebSocketDatasource;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';Object.defineProperty(exports,"__esModule",{value:true});var _createClass=function(){function defineProperties(target,props){for(var i=0;i<props.length;i++){var descriptor=props[i];descriptor.enumerable=descriptor.enumerable||false;descriptor.configurable=true;if("value" in descriptor)descriptor.writable=true;Object.defineProperty(target,descriptor.key,descriptor);}}return function(Constructor,protoProps,staticProps){if(protoProps)defineProperties(Constructor.prototype,protoProps);if(staticProps)defineProperties(Constructor,staticProps);return Constructor;};}();function _classCallCheck(instance,Constructor){if(!(instance instanceof Constructor)){throw new TypeError("Cannot call a class as a function");}}var backoff=__webpack_require__(5);var WebSocketClient=function(){ /**
 	   * @param url DOMString The URL to which to connect; this should be the URL to which the WebSocket server will respond.
 	   * @param protocols DOMString|DOMString[] Either a single protocol string or an array of protocol strings. These strings are used to indicate sub-protocols, so that a single server can implement multiple WebSocket sub-protocols (for example, you might want one server to be able to handle different types of interactions depending on the specified protocol). If you don't specify a protocol string, an empty string is assumed.
 	   */function WebSocketClient(url,protocols){var options=arguments.length<=2||arguments[2]===undefined?{}:arguments[2];_classCallCheck(this,WebSocketClient);this.url=url;this._protocols=protocols;this.reconnectEnabled=true;this.listeners={};this.backoff=backoff[options.backoff||'fibonacci'](options);this.backoff.on('backoff',this.onBackoffStart.bind(this));this.backoff.on('ready',this.onBackoffReady.bind(this));this.backoff.on('fail',this.onBackoffFail.bind(this));this.open();}_createClass(WebSocketClient,[{key:'open',value:function open(){var reconnect=arguments.length<=0||arguments[0]===undefined?false:arguments[0];this.isReconnect=reconnect;this.ws=new WebSocket(this.url,this._protocols);this.ws.onclose=this.onCloseCallback.bind(this);this.ws.onerror=this.onErrorCallback.bind(this);this.ws.onmessage=this.onMessageCallback.bind(this);this.ws.onopen=this.onOpenCallback.bind(this);} /**
@@ -270,16 +397,16 @@
 	 */WebSocketClient.CLOSED=WebSocket.CLOSED;exports.default=WebSocketClient;
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	//      Copyright (c) 2012 Mathieu Turcotte
 	//      Licensed under the MIT license.
 
-	var Backoff = __webpack_require__(5);
-	var ExponentialBackoffStrategy = __webpack_require__(14);
-	var FibonacciBackoffStrategy = __webpack_require__(16);
-	var FunctionCall = __webpack_require__(17);
+	var Backoff = __webpack_require__(6);
+	var ExponentialBackoffStrategy = __webpack_require__(15);
+	var FibonacciBackoffStrategy = __webpack_require__(17);
+	var FunctionCall = __webpack_require__(18);
 
 	module.exports.Backoff = Backoff;
 	module.exports.FunctionCall = FunctionCall;
@@ -307,15 +434,15 @@
 
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	//      Copyright (c) 2012 Mathieu Turcotte
 	//      Licensed under the MIT license.
 
-	var events = __webpack_require__(6);
-	var precond = __webpack_require__(7);
-	var util = __webpack_require__(9);
+	var events = __webpack_require__(7);
+	var precond = __webpack_require__(8);
+	var util = __webpack_require__(10);
 
 	// A class to hold the state of a backoff operation. Accepts a backoff strategy
 	// to generate the backoff delays.
@@ -378,7 +505,7 @@
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -686,17 +813,6 @@
 
 
 /***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*
-	 * Copyright (c) 2012 Mathieu Turcotte
-	 * Licensed under the MIT license.
-	 */
-
-	module.exports = __webpack_require__(8);
-
-/***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -705,9 +821,20 @@
 	 * Licensed under the MIT license.
 	 */
 
-	var util = __webpack_require__(9);
+	module.exports = __webpack_require__(9);
 
-	var errors = module.exports = __webpack_require__(13);
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*
+	 * Copyright (c) 2012 Mathieu Turcotte
+	 * Licensed under the MIT license.
+	 */
+
+	var util = __webpack_require__(10);
+
+	var errors = module.exports = __webpack_require__(14);
 
 	function failCheck(ExceptionConstructor, callee, messageFormat, formatArgs) {
 	    messageFormat = messageFormat || '';
@@ -797,7 +924,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -1325,7 +1452,7 @@
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(11);
+	exports.isBuffer = __webpack_require__(12);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -1369,7 +1496,7 @@
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(12);
+	exports.inherits = __webpack_require__(13);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -1387,10 +1514,10 @@
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(10)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(11)))
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -1576,7 +1703,7 @@
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -1587,7 +1714,7 @@
 	}
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -1616,7 +1743,7 @@
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -1624,7 +1751,7 @@
 	 * Licensed under the MIT license.
 	 */
 
-	var util = __webpack_require__(9);
+	var util = __webpack_require__(10);
 
 	function IllegalArgumentError(message) {
 	    Error.call(this, message);
@@ -1646,16 +1773,16 @@
 	module.exports.IllegalArgumentError = IllegalArgumentError;
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	//      Copyright (c) 2012 Mathieu Turcotte
 	//      Licensed under the MIT license.
 
-	var util = __webpack_require__(9);
-	var precond = __webpack_require__(7);
+	var util = __webpack_require__(10);
+	var precond = __webpack_require__(8);
 
-	var BackoffStrategy = __webpack_require__(15);
+	var BackoffStrategy = __webpack_require__(16);
 
 	// Exponential backoff strategy.
 	function ExponentialBackoffStrategy(options) {
@@ -1693,14 +1820,14 @@
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	//      Copyright (c) 2012 Mathieu Turcotte
 	//      Licensed under the MIT license.
 
-	var events = __webpack_require__(6);
-	var util = __webpack_require__(9);
+	var events = __webpack_require__(7);
+	var util = __webpack_require__(10);
 
 	function isDef(value) {
 	    return value !== undefined && value !== null;
@@ -1779,15 +1906,15 @@
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	//      Copyright (c) 2012 Mathieu Turcotte
 	//      Licensed under the MIT license.
 
-	var util = __webpack_require__(9);
+	var util = __webpack_require__(10);
 
-	var BackoffStrategy = __webpack_require__(15);
+	var BackoffStrategy = __webpack_require__(16);
 
 	// Fibonacci backoff strategy.
 	function FibonacciBackoffStrategy(options) {
@@ -1813,18 +1940,18 @@
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	//      Copyright (c) 2012 Mathieu Turcotte
 	//      Licensed under the MIT license.
 
-	var events = __webpack_require__(6);
-	var precond = __webpack_require__(7);
-	var util = __webpack_require__(9);
+	var events = __webpack_require__(7);
+	var precond = __webpack_require__(8);
+	var util = __webpack_require__(10);
 
-	var Backoff = __webpack_require__(5);
-	var FibonacciBackoffStrategy = __webpack_require__(16);
+	var Backoff = __webpack_require__(6);
+	var FibonacciBackoffStrategy = __webpack_require__(17);
 
 	// Wraps a function to be called in a backoff loop.
 	function FunctionCall(fn, args, callback) {
@@ -2009,7 +2136,7 @@
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports) {
 
 	function CircularBuffer(capacity){
@@ -2093,51 +2220,57 @@
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
-	    var WebSocketClient = __webpack_require__(3).default;
-	    __webpack_require__(20);
+	    var WebSocketDatasource = __webpack_require__(3);
+	    __webpack_require__(21);
 
+	    var esid
 	    var observable = {
-	        onUpdate: null
-	    };
-
-	    var last = {};
-	    var lastTime = 0;
-
-	    var updateStatesWs = new WebSocketClient('ws://' + window.location.host + '/datasource?s=mavlink/messages_stats');
-	    updateStatesWs.onopen = function () { updateStatesWs.binaryType = 'arraybuffer'; };
-	    updateStatesWs.onmessage = function (m) {
-	        var view = new DataView(m.data);
-	        var time = view.getFloat64(0);
-	        var jsonText = view.getString(8);
-	        var stats = JSON.parse(jsonText);
-
-	        if (typeof observable.onUpdate === 'function') {
-	            var out = [];
-	            for (type in stats) {
-	                var frequency = 0;
-	                if (type in last) {
-	                    frequency = Math.round((stats[type] - last[type]) / (time - lastTime));
-	                }
-	                out.push({
-	                    type: type,
-	                    count: stats[type],
-	                    frequency: frequency
-	                });
-	            }
-	            observable.onUpdate(out);
+	        onUpdate: null,
+	        updateESID: function (newesid) {
+	            esid = newesid;
+	            update(esid);
 	        }
-	        lastTime = time;
-	        last = stats;
 	    };
+	    function update(esid) {
+	        var last = {};
+	        var lastTime = 0;
+
+	        var updateStatesWs = new WebSocketDatasource('ws://' + window.location.host + '/datasource?s=mavlink/messages_stats$' + esid);
+	        updateStatesWs.onopen = function () { updateStatesWs.binaryType = 'arraybuffer'; };
+	        updateStatesWs.onmessage = function (m) {
+	            var view = new DataView(m.data);
+	            var time = view.getFloat64(0);
+	            var jsonText = view.getString(8);
+	            var stats = JSON.parse(jsonText);
+
+	            if (typeof observable.onUpdate === 'function') {
+	                var out = [];
+	                for (type in stats) {
+	                    var frequency = 0;
+	                    if (type in last) {
+	                        frequency = Math.round((stats[type] - last[type]) / (time - lastTime));
+	                    }
+	                    out.push({
+	                        type: type,
+	                        count: stats[type],
+	                        frequency: frequency
+	                    });
+	                }
+	                observable.onUpdate(out);
+	            }
+	            lastTime = time;
+	            last = stats;
+	        };
+	    }
 	    return observable;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports) {
 
 	DataView.prototype.getString = function(offset, length){
@@ -2155,7 +2288,97 @@
 	};
 
 /***/ },
-/* 21 */
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+	    var WebSocketDatasource = __webpack_require__(3);
+
+	    var BatteryUpdater = function (battery) {
+
+	        this.updateESID = function (esid) {
+	            function helper(source, handler) {
+	                var ws = new WebSocketDatasource('ws://' + window.location.host + '/datasource?s=' + source);
+	                ws.onmessage = function (m) {
+	                    var view = new DataView(m.data);
+	                    var value = view.getFloat64(8);
+	                    handler(value);
+	                };
+	            }
+
+	            helper('mavlink-SYS_STATUS/battery_remaining$' + esid,
+	                function (v) { battery.charge = v; });
+	            helper('mavlink-SYS_STATUS/current_battery$' + esid,
+	                function (v) { battery.current = v; });
+	            helper('mavlink-SYS_STATUS/voltage_battery$' + esid,
+	                function (v) { battery.tension = v; });
+	        }
+	    };
+	    return BatteryUpdater;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+	    var WebSocketDatasource = __webpack_require__(3);
+
+	    var Heartbeat = function (heartbeat) {
+
+	        var last;
+	        var STATUS = [
+	            'UNINIT',
+	            'BOOT',
+	            'CALIBRATING',
+	            'STANDBY',
+	            'ACTIVE',
+	            'CRITICAL',
+	            'EMERGENCY',
+	            'POWEROFF',
+	        ];
+
+	        var ws = new WebSocketDatasource('ws://' + window.location.host + '/datasource?s=mavlink-HEARTBEAT/system_status');
+	        ws.onmessage = function (m) {
+	            var view = new DataView(m.data);
+	            var time = view.getFloat64(0);
+	            var value = view.getFloat64(8);
+
+	            heartbeat.status = STATUS[value] ? STATUS[value]: 'UNDEFINED';
+	            heartbeat.last = time - last;
+
+	            last = time;
+	        };
+
+
+	    };
+	    return Heartbeat;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+
+	    var WebSocketClient = __webpack_require__(4).default;
+
+	    MavErrorMonitor = function (output) {
+	        var ws = new WebSocketClient('ws://' + window.location.host + '/mavlink/errors/*-*');
+	        ws.onmessage = function (m) {
+	            if (output.length > 50) {
+	                output.splice(0, 1);
+	            }
+	            output.push(m.data);
+	        };
+	    };
+
+	    return MavErrorMonitor;
+
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -2163,7 +2386,7 @@
 	 * Module dependencies.
 	 */
 
-	var now = __webpack_require__(22);
+	var now = __webpack_require__(26);
 
 	/**
 	 * Returns a function, that, as long as it continues to be invoked, will not
@@ -2214,7 +2437,7 @@
 
 
 /***/ },
-/* 22 */
+/* 26 */
 /***/ function(module, exports) {
 
 	module.exports = Date.now || now
@@ -2225,7 +2448,7 @@
 
 
 /***/ },
-/* 23 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// json5.js
@@ -2996,6 +3219,28 @@
 	    return internalStringify(topLevelHolder, '', true);
 	};
 
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+	    return function (esidList) {
+	        var WebSocketClient = __webpack_require__(4).default;
+
+	        var ws = new WebSocketClient('ws://' + window.location.host + '/mavlink/esid/ws', 'AQ');
+	        ws.onmessage = function (msg) {
+	            esidList.splice(0);
+	            Array.prototype.push.apply(esidList, JSON.parse(msg.data));
+	        };
+	        ws.onclose = function () {
+	            esidList.splice(0);
+	        };
+	        ws.onopen = function () {
+	            ws.send('A');
+	        };
+	    };
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ }
 /******/ ]);
