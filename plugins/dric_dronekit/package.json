@@ -12,6 +12,7 @@
     "printf": "^0.2.5",
     "vue": "^2.0.3",
     "webpack": "^1.13.2",
-    "websocket.js": "^0.1.6"
+    "websocket.js": "^0.1.6",
+    "websocketdatasource": "file:..\\..\\..\\WebSocketDatasource\\WebSocketDatasource"
   }
 }

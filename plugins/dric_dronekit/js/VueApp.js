@@ -1,8 +1,17 @@
 ﻿define(function () {
     var printf = require('printf');
     var WebSocketClient = require('websocket.js').default;
+    var WebSocketDatasource = require('websocketdatasource');
 
     var el = '#page-dronekit';
+
+    function updateIndicator(color, removeOrange) {
+        var $indicator = $('.dronekit-indicator');
+        $indicator.removeClass('connecting-red connecting-green');
+        if(removeOrange)
+            $indicator.removeClass('connecting-orange');
+        $indicator.addClass('connecting-' + color);
+    }
 
     var app = {
         el: el,
@@ -27,7 +36,6 @@
                         break;
                 }
 
-                console.log(output);
                 $output.val(output);
             },
             advancedclick: function (e) {
@@ -53,15 +61,18 @@
 
                 $el.find('.dronekit-working').show();
                 $el.find('.dronekit-connexion-msg').hide();
+                updateIndicator('orange');
 
                 $.post('/dronekit/connect', { ip: connectionString })
                     .done(function () {
                         $box.removeClass('box-danger');
                         $box.addClass('box-success');
+                        updateIndicator('green', true);
                         self.isConnected = true;
                     })
                     .fail(function () {
                         $el.find('.dronekit-connexion-msg-error').show();
+                        updateIndicator('red', true);
                         self.isConnected = false;
                     })
                     .always(function () {
@@ -71,18 +82,37 @@
         }
     };
 
-    var vehicleStatus = new WebSocketClient('ws://' + window.location.host + '/datasource?s=dronekit-heartbeat', undefined, { strategy: "exponential" });
+    var vehicleStatus = new WebSocketDatasource('ws://' + window.location.host + '/datasource?s=dronekit-heartbeat');
     vehicleStatus.onmessage = function (m) {
         if (m.data === '___NOVEHICLE__') {
+            updateIndicator('red');
             app.data.isConnected = false;
         } else {
+            updateIndicator('green');
             app.data.isConnected = true;
         }
     };
     vehicleStatus.onclose = function (m) {
+        updateIndicator('red');
         app.data.isConnected = false;
         console.debug('disconnected');
     }
+
+    //var vehicleStatus = new WebSocketClient('ws://' + window.location.host + '/datasource?s=dronekit-heartbeat', { strategy: "exponential" });
+    //vehicleStatus.onmessage = function (m) {
+    //    if (m.data === '___NOVEHICLE__') {
+    //        updateIndicator('red');
+    //        app.data.isConnected = false;
+    //    } else {
+    //        updateIndicator('green');
+    //        app.data.isConnected = true;
+    //    }
+    //};
+    //vehicleStatus.onclose = function (m) {
+    //    updateIndicator('red');
+    //    app.data.isConnected = false;
+    //    console.debug('disconnected');
+    //}
 
     return app;
 });

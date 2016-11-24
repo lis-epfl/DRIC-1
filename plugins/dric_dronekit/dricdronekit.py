@@ -8,6 +8,7 @@ from sys import stdout, stderr
 from werkzeug.exceptions import ServiceUnavailable
 from eventlet import sleep, spawn_after
 from logging import getLogger
+from yaml import load as parse_yaml
 
 _logger = getLogger('dric.dronekit')
 
@@ -29,7 +30,10 @@ class DronekitPlugin(dric.Plugin):
             return dric.JSONResponse({'status': self.vehicle.system_status.state})
     
     def forward(self, vehicle, name, message):
-        dric.bus.publish('MAVLINK', name, 255, message)
+        # convert message to dictionnary
+        dict_message = parse_yaml(str(message)[len(name):])
+
+        dric.bus.publish('MAVLINK', name, 255, dict_message)
 
     def heartbeat(self, vehicle, name, message):
         if self.__kill_subroutine is not None:
@@ -45,6 +49,7 @@ class DronekitPlugin(dric.Plugin):
     def status(self, request):
         return dric.JSONResponse({'status': self.vehicle.system_status.state})
 
+    @dric.support.datasource.noplot()
     @dric.datasource('dronekit-heartbeat')
     def ds_status(self):
         while True:
@@ -57,13 +62,7 @@ class DronekitPlugin(dric.Plugin):
 dric.register(__name__, DronekitPlugin())
 
 dric.support.inject_content_script('/content/plugins/dric_dronekit/js/dronekit.js')
+dric.support.inject_content_script('/content/plugins/dric_dronekit/css/dronekit.css')
 
 if(dric.env == 'dev'):
-    _devlogger = getLogger('dric.dronekit.webpack')
-
-    class WebpackWatchPlugin(dric.Plugin):
-        def setup(self, eventbus):
-            cwd = dirname(realpath(__file__)) 
-            _devlogger.info('Start webpack --watch')
-            process = subprocess.Popen(['webpack', '--watch'], stdout=stdout, stderr=stdout, cwd=cwd, shell=True)
-    dric.register(__name__ + '/dev-webpack', WebpackWatchPlugin());
+    dric.register('dronekit/webpack-watch', dric.support.WebpackWatchPlugin(__file__, getLogger('dric.dronekit.webpack')))

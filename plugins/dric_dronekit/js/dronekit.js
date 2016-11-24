@@ -75,8 +75,17 @@
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
 	    var printf = __webpack_require__(3);
 	    var WebSocketClient = __webpack_require__(30).default;
+	    var WebSocketDatasource = __webpack_require__(40);
 
 	    var el = '#page-dronekit';
+
+	    function updateIndicator(color, removeOrange) {
+	        var $indicator = $('.dronekit-indicator');
+	        $indicator.removeClass('connecting-red connecting-green');
+	        if(removeOrange)
+	            $indicator.removeClass('connecting-orange');
+	        $indicator.addClass('connecting-' + color);
+	    }
 
 	    var app = {
 	        el: el,
@@ -101,7 +110,6 @@
 	                        break;
 	                }
 
-	                console.log(output);
 	                $output.val(output);
 	            },
 	            advancedclick: function (e) {
@@ -127,15 +135,18 @@
 
 	                $el.find('.dronekit-working').show();
 	                $el.find('.dronekit-connexion-msg').hide();
+	                updateIndicator('orange');
 
 	                $.post('/dronekit/connect', { ip: connectionString })
 	                    .done(function () {
 	                        $box.removeClass('box-danger');
 	                        $box.addClass('box-success');
+	                        updateIndicator('green', true);
 	                        self.isConnected = true;
 	                    })
 	                    .fail(function () {
 	                        $el.find('.dronekit-connexion-msg-error').show();
+	                        updateIndicator('red', true);
 	                        self.isConnected = false;
 	                    })
 	                    .always(function () {
@@ -145,18 +156,37 @@
 	        }
 	    };
 
-	    var vehicleStatus = new WebSocketClient('ws://' + window.location.host + '/datasource?s=dronekit-heartbeat', undefined, { strategy: "exponential" });
+	    var vehicleStatus = new WebSocketDatasource('ws://' + window.location.host + '/datasource?s=dronekit-heartbeat');
 	    vehicleStatus.onmessage = function (m) {
 	        if (m.data === '___NOVEHICLE__') {
+	            updateIndicator('red');
 	            app.data.isConnected = false;
 	        } else {
+	            updateIndicator('green');
 	            app.data.isConnected = true;
 	        }
 	    };
 	    vehicleStatus.onclose = function (m) {
+	        updateIndicator('red');
 	        app.data.isConnected = false;
 	        console.debug('disconnected');
 	    }
+
+	    //var vehicleStatus = new WebSocketClient('ws://' + window.location.host + '/datasource?s=dronekit-heartbeat', { strategy: "exponential" });
+	    //vehicleStatus.onmessage = function (m) {
+	    //    if (m.data === '___NOVEHICLE__') {
+	    //        updateIndicator('red');
+	    //        app.data.isConnected = false;
+	    //    } else {
+	    //        updateIndicator('green');
+	    //        app.data.isConnected = true;
+	    //    }
+	    //};
+	    //vehicleStatus.onclose = function (m) {
+	    //    updateIndicator('red');
+	    //    app.data.isConnected = false;
+	    //    console.debug('disconnected');
+	    //}
 
 	    return app;
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -6870,6 +6900,60 @@
 	};
 
 	module.exports = FunctionCall;
+
+
+/***/ },
+/* 40 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(){
+	    var WebSocketDatasource = function(url){
+	        var WebSocketClient = __webpack_require__(30).default;
+	        var self = this;
+
+	        this.status = 0;
+	        this.datasourceStatus = -1;
+
+	        function onmessage(m) {
+	            if (self.status === 0) {
+	                var view = new DataView(m.data);
+	                self.datasourceStatus = view.getInt32(0);
+	                console.log(self.datasourceStatus);
+	                self.status = 1;
+	                Object.apply(self, self.onDatasourceStatusChanged);
+	                
+	                switch (self.datasourceStatus) {
+	                    case 404:
+	                        ws.close();
+	                        break;
+	                    case 200:
+	                        break;
+	                    default:
+	                        console.error('unknwon datasource status code ' + self.datasourceStatus + ' for url ' + url);
+	                        ws.close();
+	                        break;
+	                }
+	            } else {
+	                self.onmessage(m);
+	            }
+	        };
+
+
+	        this.onmessage = function (m) { };
+	        this.onclose = function () { };
+	        this.onopen = function () { };
+	        this.onDatasourceStatusChanged = function () { };
+
+	        var ws = new WebSocketClient(url, 'datasource', { strategy: "exponential" });
+
+	        ws.onopen = function () { ws.binaryType = 'arraybuffer'; self.onopen();};
+	        ws.onmessage = onmessage;
+	        ws.onclose = function () { self.onclose() };
+
+	        this.close = ws.close;
+	    };
+	    return WebSocketDatasource;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ }
