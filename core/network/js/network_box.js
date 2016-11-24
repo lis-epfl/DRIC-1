@@ -90,7 +90,6 @@ function dricNetwork() {
             //var clients = d1[0];
             //var me = d2[0];
             $('.network tbody').html('');
-            console.log(clients);
             clients.sort(function (a, b) {
                 return (a.name > b.name);
             });
