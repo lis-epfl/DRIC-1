@@ -79,13 +79,6 @@
 	        });
 
 	    });
-
-	    // Create box manager
-	    dric.box.devtools = new dric.BoxManager('.devtools-boxes');
-
-	    // Add box
-	    var boxRestart = new dric.Box()
-	        .setTitle('Developer tools');
 	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ }

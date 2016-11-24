@@ -25,11 +25,4 @@ define(function () {
         });
 
     });
-
-    // Create box manager
-    dric.box.devtools = new dric.BoxManager('.devtools-boxes');
-
-    // Add box
-    var boxRestart = new dric.Box()
-        .setTitle('Developer tools');
 });
