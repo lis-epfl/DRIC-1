@@ -13,13 +13,14 @@ from struct import pack
 _logger = getLogger('dric.dsws')
 
 class _Helper(object):
-    def __init__(self, source, ws, request, source_name, sleep_time, start_time):
+    def __init__(self, source, ws, request, source_name, sleep_time, start_time, sid):
         self.__source = source
         self.__ws = ws
         self.__request = request
         self.__source_name = source_name
         self.__sleep_time = sleep_time
         self.__start_time = start_time
+        self.__sid = sid
 
     def start(self):
         spawn(self.__wait_msg)
@@ -27,10 +28,19 @@ class _Helper(object):
         buffer = []
         max_buffer_size = 5
 
-        for msg in self.__source(self.__source_name)():
+        source = self.__source(self.__source_name)
+
+        def message_source():
+            if hasattr(source, 'withcontext') and source.withcontext:
+                return source({"cid":self.__sid, "start":self.__start_time})
+            else:
+                return source()
+
+        self.__ws.send(pack('!i', 200))
+        for msg in message_source():
             try:
-                #strmsg = "{} {}".format(time() - self.__start_time, msg)
-                if hasattr(self.__source(self.__source_name), 'isTimeSerie') and self.__source(self.__source_name).isTimeSerie:
+                # TIME SERIES
+                if hasattr(source, 'isTimeSerie') and source.isTimeSerie:
                     event_time = time() - self.__start_time
 
                     buffer.append(event_time)
@@ -80,40 +90,47 @@ class DatasourceWebsocketPlugin(dric.Plugin, dric.DatasourceEndpoint):
                 self.__start_times.pop(sorted_start_times.pop()[0])
 
 
+# only time series
     @dric.route('datasources_list', '/dsws_datasources')
     def datasources_list(self, request):
+        all = request.args.get('all', False, bool)
         out = []
         for source_name in self.sources():
-            if hasattr(self.source(source_name), 'isTimeSerie') and self.source(source_name).isTimeSerie:
+            if all:
                 out.append(source_name)
+            elif not (hasattr(self.source(source_name), 'noplot') and self.source(source_name).noplot is True):
+                out.append(source_name)
+                
             
         return dric.JSONResponse(out)
 
-    @dric.websocket('datasource', '/datasource')
+    @dric.websocket('datasource', '/datasource', supported_protocols=['datasource'])
     def datasource(self, ws, request):
-        sleep_time = request.args.get('p', 0, type=int)/1000.0
+        try:
+            sleep_time = request.args.get('p', 0, type=int)/1000.0
 
-        if 's' not in request.args:
-            raise dric.NotFound
-        source_name = request.args.get('s', type=str)
+            if 's' not in request.args:
+                raise dric.NotFound
+            source_name = request.args.get('s', type=str)
+            _logger.debug('Incoming connection for datasource %s', source_name)
 
-        if 'sid' in request.args:
-            sid = request.args.get('sid', type=str);
-            if sid not in self.__start_times:
-                self.clean()
-                self.__start_times[sid] = time()
-            start_time = self.__start_times[sid]
-        else:
-            start_time = time()
+            sid = None
+            if 'sid' in request.args:
+                sid = request.args.get('sid', type=str);
+                if sid not in self.__start_times:
+                    self.clean()
+                    self.__start_times[sid] = time()
+                start_time = self.__start_times[sid]
+            else:
+                start_time = time()
 
-        if self.has_source(source_name) is False:
-            raise dric.NotFound
-        _logger.info('Serving datasource %s', source_name)
+            if self.has_source(source_name) is False:
+                raise dric.NotFound
+            _logger.info('Serving datasource %s', source_name)
 
-        _Helper(self.source, ws, request, source_name, sleep_time, start_time).start()
-        
-    
-
+            _Helper(self.source, ws, request, source_name, sleep_time, start_time, sid).start()
+        except dric.NotFound:
+            ws.send(pack('!i', 404));
 
 dric.register(__name__, DatasourceWebsocketPlugin())
 
