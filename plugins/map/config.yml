@@ -1,5 +1,6 @@
 map:
     tiles:              plugins/map/maps/tiles
+    source:             plugins/map/maps/source
     slicer:
         # source directory
         source:         plugins/map/maps/source

@@ -25,3 +25,7 @@
     padding-left: 10px;
     background: grey;
 }
+
+#map-waypoint-editor .form-group {
+    margin-bottom: 0;
+}
