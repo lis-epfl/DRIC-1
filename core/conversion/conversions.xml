@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<!-- Physical quantities are:
+  - Length
+  - Time
+  - Mass
+  - Temperature
+  - Electric Charge 
+See: https://en.wikipedia.org/wiki/Natural_units  
+-->
+  
+<conversions>
+  <!-- Distance -->
+  <conversion quantity="length" from="fm" to="m">x * 10^(-15)</conversion>
+  <conversion quantity="length"  from="pm" to="m">x * 10^(-12)</conversion>
+  <conversion quantity="length"  from="nm" to="m">x * 10^(-9)</conversion>
+  <conversion quantity="length"  from="um" to="m">x * 10^(-6)</conversion>
+  <conversion quantity="length"  from="mm" to="m">x * 10^(-3)</conversion>
+  <conversion quantity="length"  from="cm" to="m">x * 10^(-2)</conversion>
+  <conversion quantity="length"  from="dm" to="m">x * 10^(-1)</conversion>
+  <conversion quantity="length"  from="dam" to="m">x * 10^1</conversion>
+  <conversion quantity="length"  from="hm" to="m">x * 10^2</conversion>
+  <conversion quantity="length"  from="km" to="m">x * 10^3</conversion>
+  
+  <conversion quantity="length"  from="m" to="fm">x * 10^15</conversion>
+  <conversion quantity="length"  from="m" to="pm">x * 10^12</conversion>
+  <conversion quantity="length"  from="m" to="nm">x * 10^9</conversion>
+  <conversion quantity="length"  from="m" to="um">x * 10^6</conversion>
+  <conversion quantity="length"  from="m" to="mm">x * 10^3</conversion>
+  <conversion quantity="length"  from="m" to="cm">x * 10^2</conversion>
+  <conversion quantity="length"  from="m" to="dm">x * 10^1</conversion>
+  <conversion quantity="length"  from="m" to="dam">x * 10^(-1)</conversion>
+  <conversion quantity="length"  from="m" to="hm">x * 10^(-2)</conversion>
+  <conversion quantity="length"  from="m" to="km">x * 10^(-3)</conversion>
+ 
+  <!-- Temperature -->
+  <conversion quantity="temperature" from="K" to="C">x - 273.15</conversion>
+  <conversion quantity="temperature" from="C" to="K">x + 273.15</conversion>
+  <conversion quantity="temperature" from="F" to="C">(x - 32) / 1.8</conversion>
+  <conversion quantity="temperature" from="C" to="F">x * 1.8 + 32</conversion>
+</conversions>
