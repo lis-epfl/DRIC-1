@@ -4,7 +4,7 @@
     var randomstring = require('randomstring');
     var self = {};
     var sid = randomstring.generate();
-    var WebSocketDatasource = require('websocketdatasource');
+    var WebSocketDatasource = require('websocket-datasource');
 
 
     var maxTime = 0;
