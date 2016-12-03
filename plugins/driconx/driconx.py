@@ -162,12 +162,39 @@ class DriconxPlugin(dric.Plugin):
             my_connection = self.connections[connection['name']]
             my_connection['connected'] = False
             my_connection['connecting'] = False
+            
+            self.update_driconxwsockets()
 
             return dric.Response(str(my_connection))
         except dric.exceptions.NotFound as e:
             raise e
         except Exception as e:
             raise dric.exceptions.BadRequest()
+
+    @dric.route('driconx_delete', '/driconx/delete')
+    def connection_delete(self, request):
+        if request.content_length > 1024 * 10:
+            raise dric.exceptions.RequestEntityTooLarge()
+        if request.method != 'POST':
+            raise dric.exceptions.MethodNotAllowed()
+        try:
+            connection = loads(request.get_data(as_text=True))
+            
+            if connection['name'] not in self.connections or connection['name'] not in self.sockets:
+                raise dric.exceptions.NotFound()
+            
+            my_connection = self.connections[connection['name']]
+            self.sockets[connection['name']].close()
+            self.sockets.pop(connection['name'])
+            self.connections.pop(connection['name'])
+
+            self.update_driconxwsockets()
+
+            return dric.Response(str(my_connection))
+        except dric.exceptions.NotFound as e:
+            raise e
+        except Exception as e:
+            raise dric.exceptions.BadRequest(e)
 
     @dric.route("driconx_bindings_list", '/driconx/bindings')
     def route_bindings_list(self, request):
@@ -182,6 +209,7 @@ class DriconxPlugin(dric.Plugin):
             return dric.JSONResponse([binding for binding in self.bindings])
         else:
             return dric.Response('Not acceptable', status=406)
+
         
 driconxplugin = DriconxPlugin()
 dric.register(__name__, driconxplugin)
@@ -205,3 +233,4 @@ class DriconxwsFunPass(dric.FunPass):
 dric.get_pass_manager().add_pass(DriconxwsFunPass('driconxws-funpass', driconxplugin))
 
 dric.support.inject_content_script('/content/plugins/driconx/dist/driconx.js')
+dric.support.inject_content_script('/content/plugins/driconx/css/driconx.css')

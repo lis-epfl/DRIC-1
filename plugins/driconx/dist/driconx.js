@@ -66,12 +66,16 @@
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
 	    return function (el) {
 	        var WebSocketClient = __webpack_require__(2).default;
+
+	        __webpack_require__(17);
+
+	        // driconx websocket (AQ)
 	        var driconxws = new WebSocketClient('ws://' + window.location.host + '/driconx/ws');
 
 	        var app = new Vue({
 	            el: el,
 	            data: {
-	                active_only: true,
+	                active_only: false,
 	                connections: [],
 	                newConnection: {
 	                    type: 'UDP',
@@ -82,22 +86,35 @@
 	                    connecting: false,
 	                    multibinding: false,
 	                    status: null,
-	                    systems_last_time: {}
+	                    systems_last_time: {},
+	                    systems: [],
+	                    hover: false
 	                },
 	                connected: false,
 	                bindings: []
 	            },
 	            methods: {
 	                add: function (e) {
+	                    // Add a new connection
 	                    e.preventDefault();
 	                    var newConnx = $.extend(true, {}, this.newConnection);
 	                    this.connections.push(newConnx);
 	                    this.connect(newConnx);
 	                },
 	                deleteConnection: function (connection) {
-	                    this.connections.splice(this.connections.indexOf(connection), 1);
+	                    var self = this;
+	                    // Delete a connection
+	                    $.ajax({
+	                        url: 'http://' + window.location.host + '/driconx/delete',
+	                        method: 'post',
+	                        data: JSON.stringify(connection)
+	                    }).fail(function (jqXHR, textStatus, errorThrown) {
+	                        console.log(errorThrown);
+	                        console.log(self.connections.splice(self.connections.indexOf(connection), 1));
+	                    });
 	                },
 	                connect: function (connection) {
+	                    // Click on connect button
 	                    connection.connecting = true;
 	                    $.ajax({
 	                        url: 'http://' + window.location.host + '/driconx/new',
@@ -114,6 +131,7 @@
 	                    });
 	                },
 	                disconnect: function (connection) {
+	                    // Click on disconnect button
 	                    connection.connecting = true;
 	                    $.ajax({
 	                        url: 'http://' + window.location.host + '/driconx/disconnect',
@@ -136,6 +154,11 @@
 	            var data = JSON.parse(event.data);
 	            app.connected = true;
 	            app.connections = data;
+
+	            for (var i = 0; i < app.connections.length; i++) {
+	                var c = app.connections[i];
+	                if (!('hover' in c)) c['hover'] = false;
+	            }
 	        };
 	        driconxws.onclose = function () {
 	            app.connected = false;
@@ -1971,6 +1994,199 @@
 
 	module.exports = FunctionCall;
 
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+	    __webpack_require__(20);
+
+	    Aggregation = function (esidList, alias) {
+	        this.reason = null;
+	        this.systemid = -1;
+	        this.alias = alias;
+	        this.esidList = esidList;
+	    };
+
+	    Vue.component('driconx-aggregs', {
+	        template: __webpack_require__(18),
+	        props: ['connections'],
+	        data: function () {
+	            return {
+	                'aggregations': [],
+	                'showNewDrop': false,
+	                'pruneTimeout': null,
+	                'aggregateById': true
+	            };
+	        },
+	        watch: {
+	            'connections': function () {
+	                this.recomputeAggregations();
+	            },
+	            'aggregateById': function () {
+	                console.log('ok');
+	                this.recomputeAggregations();
+	            }
+	        },
+	        methods: {
+	            recomputeAggregations: function () {
+	                var connections = this.connections;
+	                // for each system, check if system is already in aggregation
+	                for (var i = 0; i < connections.length; i++) {
+	                    var connection = connections[i];
+	                    for (var j = 0; j < connection.systems.length; j++) {
+	                        var system = connection.systems[j];
+	                        var systemAggreg = this.systemAggregation(system);
+	                        if (systemAggreg === null) {
+	                            this.aggregations.push(new Aggregation([{ esid: system, connection: connection }], system));
+	                        } else if (systemAggreg.esidList.findIndex(e=>e.esid === system) === -1) {
+	                            // remove from all aggregs
+	                            this.aggregations.map(a=>a.esidList).forEach(l => l.removeIf(e=>e.esid === system));
+	                            // add to aggreg
+	                            systemAggreg.esidList.push({ esid: system, connection: connection });
+	                        }
+
+	                        // update systems' connections ref
+	                        var candidates = Array.prototype.concat.apply([], this.aggregations.map(a=>a.esidList)).filter(s=>s.esid === system);
+	                        if (candidates.length > 0) {
+	                            candidates.forEach(c => c.connection = connection);
+	                        }
+	                    }
+	                }
+
+	                // remove orphan systems from aggregations with a slight timeout because we want to give the uav a chance to respond
+	                window.clearTimeout(this.pruntTimeout);
+	                var self = this;
+	                this.pruntTimeout = window.setTimeout(function () {
+	                    self.aggregations.map(a=>a.esidList)
+	                    .forEach(l =>l.removeIf(e=>
+	                        Array.prototype.concat.apply([], self.connections.map(c=>c.systems)).filter(s=>s === e.esid).length == 0
+	                        ));
+	                }, 1200);
+	            },
+	            drop: function (targetAggreg, event) {
+	                var system = JSON.parse(event.dataTransfer.getData('application/json')).esid;
+	                var aggreg = this.systemAggregation(system);
+
+	                if (aggreg === null) {
+	                    console.error('Unknown system');
+	                    return;
+	                }
+
+	                var index = aggreg.esidList.map(x=>x.esid).indexOf(system);
+	                var detached = aggreg.esidList.splice(index, 1);
+
+	                var connection = this.systemConnection(system);
+
+	                if (connection === null) {
+	                    console.error('Unknown system connection');
+	                    return;
+	                }
+	                detached.connection = connection;
+	                detached.esid = system;
+
+	                targetAggreg.esidList.push(detached);
+	            },
+	            deaggregate: function (aggreg) {
+	                for (var i = 0; i < aggreg.esidList.length; i++) {
+	                    var esid = aggreg.esidList[i];
+	                    this.aggregations.push(new Aggregation([esid], esid.esid));
+	                }
+	                aggreg.esidList.splice(0, aggreg.esidList.length);
+	            },
+	            dropOnNew: function (event) {
+	                var system = JSON.parse(event.dataTransfer.getData('application/json')).esid;
+	                var aggreg = this.systemAggregation(system);
+	                if (aggreg === null) {
+	                    console.error('Unknown system');
+	                    return;
+	                }
+
+	                var index = aggreg.esidList.map(x=>x.esid).indexOf(system);
+	                var detached = aggreg.esidList.splice(index, 1);
+	                this.aggregations.push(new Aggregation(detached, system));
+	            },
+	            systemConnection: function (system) {
+	                // return connection for system
+	                for (var i = 0; i < this.connections.length; i++) {
+	                    var connection = this.connections[i];
+	                    if (connection.systems.indexOf(system) !== -1) {
+	                        return connection;
+	                    }
+	                }
+	                return null;
+	            },
+	            systemAggregation: function (system) {
+
+	                function isEqualSystem(aggregateById, a, b) {
+	                    console.log(
+	                        aggregateById,
+	                        a.substring(a.indexOf('-')),
+	                        b.substring(b.indexOf('-')),
+	                        a.substring(a.indexOf('-')) === b.substring(b.indexOf('-')));
+	                    if (aggregateById) {
+	                        return a.substring(a.indexOf('-')) === b.substring(b.indexOf('-'));
+	                    } else {
+	                        return a === b;
+	                    }
+	                }
+
+	                // return aggregation for system
+	                for (var k = 0; k < this.aggregations.length; k++) {
+	                    var aggregation = this.aggregations[k];
+	                    if (aggregation.esidList.findIndex(e => isEqualSystem(this.aggregateById, e.esid, system)) !== -1) {
+	                        return this.aggregations[k];
+	                    }
+	                }
+	                return null;
+	            }
+	        }
+	    });
+
+	    Vue.component('driconx-aggreg', {
+	        props: ['esidList', 'alias', 'reason', 'systemid'],
+	        template: __webpack_require__(19),
+	        watch: {
+	            'esidList': function () {
+	                if (this.esidList.length <= 0) {
+	                    this.$emit('empty-aggreg');
+	                }
+	            }
+	        }
+	    });
+
+
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 18 */
+/***/ function(module, exports) {
+
+	module.exports = "<div>\r\n    <div class=\"checkbox\">\r\n        <label>\r\n            <input v-model=\"aggregateById\" type=\"checkbox\"> Aggregate automatically by system id\r\n        </label>\r\n    </div>\r\n\r\n    <driconx-aggreg v-for=\"(aggreg, k) in aggregations\" \r\n                    :esid-list=\"aggreg.esidList\"\r\n                    :alias=\"aggreg.alias\"\r\n                    :reason=\"aggreg.reason\"\r\n                    :aggreg=\"aggreg\"\r\n                    :systemid=\"aggreg.systemid\"\r\n                    v-on:empty-aggreg=\"aggregations.splice(k, 1)\"\r\n                    v-on:aggreg-drop=\"drop(aggreg, $event);showNewDrop=false\"\r\n                    v-on:startdrag=\"showNewDrop=true\"\r\n                    v-on:enddrag=\"showNewDrop=false\"\r\n                    v-on:deaggregate=\"deaggregate(aggreg)\">\r\n    </driconx-aggreg>\r\n\r\n    <div class=\"box box-primary box-solid\" \r\n         v-if=\"showNewDrop\" \r\n         v-on:dragover=\"$event.preventDefault()\"\r\n         v-on:drop=\"dropOnNew\">\r\n        <div class=\"box-header with-border\">\r\n            <h3 class=\"box-title\">New vehicle</h3>\r\n        </div>\r\n        <div class=\"box-body\">\r\n        </div>\r\n        <div class=\"overlay\">\r\n        </div>\r\n    </div>\r\n\r\n</div>"
+
+/***/ },
+/* 19 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"box box-primary box-solid\"\r\n     v-on:drop=\"$emit('aggreg-drop', $event)\"\r\n     v-on:dragenter=\"$event.preventDefault()\"\r\n     v-on:dragleave=\"$event.preventDefault()\"\r\n     v-on:dragover=\"$event.preventDefault()\">\r\n\r\n    <div class=\"box-header with-border\">\r\n        <h3 class=\"box-title\">{{alias}}</h3>\r\n        <div class=\"box-tools pull-right\">\r\n            <span type=\"button\" class=\"btn btn-box-tool\" data-toggle=\"tooltip\" title=\"\" data-original-title=\"reason\" v-if=\"reason !== null\">\r\n                <i class=\"fa fa-question\"></i>\r\n            </span>\r\n            <button type=\"button\" class=\"btn btn-box-tool\" data-widget=\"collapse\"><i class=\"fa fa-minus\"></i></button>\r\n        </div>\r\n    </div>\r\n\r\n    <div class=\"box-body\">\r\n        <ul>\r\n            <li class=\"driconx-pointer\"\r\n                draggable=\"true\"\r\n                v-for=\"esid in esidList\"\r\n                v-on:dragstart=\"$emit('startdrag', esid.esid);$event.dataTransfer.setData('application/json',JSON.stringify({esid:esid.esid,systemid:systemid}))\"\r\n                v-on:dragend=\"$emit('enddrag', esid.esid)\"\r\n                v-on:mouseenter=\"esid.connection.hover=true\"\r\n                v-on:mouseleave=\"esid.connection.hover=false\">\r\n                {{esid.esid}}\r\n                <span class=\"label bg-red\" v-if=\"!esid.connection.connected\">\r\n                    <i class=\"fa fa-exclamation\"></i>\r\n                </span>\r\n            </li>\r\n        </ul>\r\n    </div>\r\n\r\n    <div class=\"box-footer\" \r\n         v-if=\"esidList.length > 1\">\r\n        <button class=\"btn btn-danger\"\r\n                v-on:click=\"$emit('deaggregate')\">\r\n            Deaggregate All\r\n        </button>\r\n    </div>\r\n</div>"
+
+/***/ },
+/* 20 */
+/***/ function(module, exports) {
+
+	'use strict';
+	Array.prototype.removeIf = function (predicate) {
+	    var output = [];
+	    var i = this.length;
+	    while(i-- > 0) {
+	        if (predicate(this[i])) {
+	            output = output.concat(this.splice(i, 1));
+	        }
+	    }
+	    return output.reverse();
+	};
 
 /***/ }
 /******/ ]);

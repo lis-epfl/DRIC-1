@@ -9,6 +9,9 @@
   "author": "Arthur Gay",
   "license": "ISC",
   "dependencies": {
+    "array-remove-if": "github:arth-ur/array-remove-if",
+    "raw-loader": "^0.5.1",
+    "sha1": "^1.1.1",
     "vue": "^2.0.7",
     "websocket.js": "^0.1.6"
   }
