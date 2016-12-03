@@ -17,4 +17,13 @@ web.config
 web.debug.config
 DRIC.pyproj
 
+# npm
 **/node_modules/**
+
+# app files
+data/
+dric.lock
+image.pdf
+
+# binary files
+*.whl
