@@ -27,7 +27,7 @@ class MapSlicerPlugin(dric.Plugin):
             for file in listdir(self.get_source_dir()):
                 # get destination dir
                 dest_dir = self.get_dest_dir(file)
-                
+
                 # if destination dir does not exists, creates it
                 if (exists(dest_dir) is False):
                     _logger.debug('MKDIR %s', dest_dir)
@@ -58,8 +58,9 @@ class MapSlicerPlugin(dric.Plugin):
         the file is ignore. 
         """
 
-        if('ignore' in file_info and file_info['ignore'] is True):
+        if(file_info is not None and 'ignore' in file_info and file_info['ignore'] is True):
             _logger.info('Ignoring %s', source_file)
+            return
 
         _logger.info('Slicing %s', source_file)
         
