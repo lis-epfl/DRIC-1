@@ -4,7 +4,7 @@ from __future__ import division
 import dric
 import dric.support
 from logging import getLogger
-from os import listdir, mkdir
+from os import listdir, mkdir, makedirs
 from os.path import join, split, splitext, exists, abspath, basename
 from shutil import rmtree
 from builtins import range
@@ -31,7 +31,7 @@ class MapSlicerPlugin(dric.Plugin):
                 # if destination dir does not exists, creates it
                 if (exists(dest_dir) is False):
                     _logger.debug('MKDIR %s', dest_dir)
-                    mkdir(dest_dir)
+                    makedirs(dest_dir)
                 
                 source_dir = join(self.get_source_dir(), file)
 
