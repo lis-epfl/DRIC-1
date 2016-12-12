@@ -55,7 +55,10 @@ class MavlinkListener(dric.Plugin):
         self.messages_stats = {}
         self.messages = {}
         self.db = None
+        # {message {parameter: datasource}}
         self.message_datasources = {}
+        # {message: datasource}
+        self.full_message_datasource = {}
         self.esids = []
         self.esid_aq = dric.aq.AQ(self.aq_esid_list)
 
@@ -113,6 +116,7 @@ class MavlinkListener(dric.Plugin):
 
         namesid = name + '$' + esid
 
+        # parameter datasoruce
         if namesid not in self.message_datasources:
             self.message_datasources[namesid] = {}
         message_datasource_dict = self.message_datasources[namesid]
@@ -131,6 +135,12 @@ class MavlinkListener(dric.Plugin):
                 dric.add_datasource(source_name, datasource)
             message_datasource_dict[parameter].push(message[parameter])
         
+        # full message datasource
+        if namesid not in self.full_message_datasource:
+            self.full_message_datasource[namesid] = MavlinkFullMessageDatasource(0.5, True)
+            dric.add_datasource('mavlink-{}'.format(namesid), self.full_message_datasource[namesid])
+        self.full_message_datasource[namesid].push(message)
+    
         #dispatch event
         event_name = 'MAVLINK/{}'.format(name)
         self.bus.publish(event_name.upper, id=esid, message=message)
@@ -259,11 +269,24 @@ class MavlinkMessageStatsDatasource(object):
             yield pack('!d', time()) + json_text
             sleep(self.sleep)
 
+class MavlinkMessageStatsDatasource(object):
+    def __init__(self, messages_stats, sleep=1, noplot=True):
+        self.sleep = sleep
+        self.noplot = noplot
+        self.messages_stats = messages_stats
+
+    def __call__(self):      
+        while True:
+            json_text = (dumps(self.messages_stats, separators=(',',':')))
+            yield pack('!d', time()) + json_text
+            sleep(self.sleep)
+
 class MavlinkMessageDatasource(object):
 
     def __init__(self, sleep=1, noplot=False):
         self.sleep = sleep
         self.queues = {}
+        # TODO: remove the next line
         self.sleep = 1
         self.noplot = noplot
         self.withcontext = True
@@ -284,6 +307,21 @@ class MavlinkMessageDatasource(object):
                     yield pack('!dd', popped[0] - context['start'], popped[1])
                 except (ValueError, TypeError) as e:
                     _logger.exception('Expected double. %s %s given.', type(popped[1]), popped[1], exc_info=e)
+            sleep(self.sleep)
+
+class MavlinkFullMessageDatasource(object):
+    def __init__(self, sleep=1, noplot=True):
+        self.sleep = sleep
+        self.noplot = noplot
+        self.data = {}
+
+    def push(self, data):
+        self.data = data
+
+    def __call__(self):        
+        while True:
+            json_text = (dumps(self.data, separators=(',',':')))
+            yield pack('!d', time()) + json_text
             sleep(self.sleep)
 
 dric.register('MAVLINK/listener', MavlinkListener())

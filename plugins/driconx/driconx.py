@@ -31,6 +31,7 @@ class ConnectionSubroutine(object):
         try:
             while True:
                 data = sock.recv(1024)
+                dric.bus.publish('MAVLINK_RAW', self.connection['name'], data, self.mavlink)
                 sleep(0.01) # security
                 try:
                     messages = self.mavlink.parse_buffer(data)
@@ -44,8 +45,10 @@ class ConnectionSubroutine(object):
                             dric.bus.publish('MAVLINK', message.get_type(), esid, message.to_dict())
 
                 except Exception as e:
+                    print(e)
                     dric.bus.publish('MAVLINK_ERROR', e, 'ALL-255')
-        except: # socket closed
+        except Exception as e: # socket closed
+            print(e)
             return
 
 class DriconxPlugin(dric.Plugin):
@@ -119,6 +122,10 @@ class DriconxPlugin(dric.Plugin):
     def connection_new(self, request):
         if request.content_length > 1024 * 10:
             raise dric.exceptions.RequestEntityTooLarge()
+        if request.method == 'OPTIONS':
+            rep = dric.Response('', status=204)
+            rep.headers['Access-Control-Allow-Methods'] ='PUT'
+            return rep
         if request.method != 'PUT':
             raise dric.exceptions.MethodNotAllowed()
         try:
@@ -149,6 +156,10 @@ class DriconxPlugin(dric.Plugin):
     def connection_disconnect(self, request):
         if request.content_length > 1024 * 10:
             raise dric.exceptions.RequestEntityTooLarge()
+        if request.method == 'OPTIONS':
+            rep = dric.Response('', status=204)
+            rep.headers['Access-Control-Allow-Methods'] ='POST'
+            return rep
         if request.method != 'POST':
             raise dric.exceptions.MethodNotAllowed()
         try:
@@ -175,6 +186,10 @@ class DriconxPlugin(dric.Plugin):
     def connection_delete(self, request):
         if request.content_length > 1024 * 10:
             raise dric.exceptions.RequestEntityTooLarge()
+        if request.method == 'OPTIONS':
+            rep = dric.Response('', status=204)
+            rep.headers['Access-Control-Allow-Methods'] ='POST'
+            return rep
         if request.method != 'POST':
             raise dric.exceptions.MethodNotAllowed()
         try:
