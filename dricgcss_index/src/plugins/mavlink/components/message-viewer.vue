@@ -8,6 +8,9 @@
             <button title="Start now" :class="'btn btn-default btn-sm ' + (acquiring?'active':'')" v-on:click="acquiring = !acquiring; startAcquisition()">
               <i class="fa fa-circle"></i>
             </button>
+            <span class="text-muted" v-if="!acquiring">
+              {{acquiringLength}}
+            </span>
           </div>
           <div class="progress-wrapper" v-if="acquiring">
             <div class="progress progress active acquisition-progress">
@@ -15,7 +18,7 @@
               </div>
             </div>
           </div>
-          <div class="button" v-if="acquiring">
+          <div class="button" v-if="acquiring || to !== null">
             <a title="Download" class="btn btn-default btn-sm" :href="fullAcquiringHref" target="_blank" v-bind:download="type + '.txt'">
               <i class="fa fa-download"></i>
             </a>
@@ -40,7 +43,7 @@
                 <button class="btn btn-default dropdown-toggle btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" v-if="type in units && key in units[type]">
                   <i class="fa fa-exchange"></i>
                 </button>
-                <a v-if="acquiring" class="btn btn-default btn-sm" target="_blank" v-bind:href="acquiringHref(key)" v-bind:download="type + '.' + key + '.txt'">
+                <a v-if="acquiring || to !== null" class="btn btn-default btn-sm" target="_blank" v-bind:href="acquiringHref(key)" v-bind:download="type + '.' + key + '.txt'">
                   <i class="fa fa-download"></i>
                 </a>
                 <a class="btn btn-primary btn-sm" target="_blank" v-bind:href="allTimeHref(key)" v-bind:download="type + '.' + key + '.txt'">
@@ -66,6 +69,7 @@ import { MessagesViewerConfig } from '../config'
 import API from '../api'
 import $ from 'jquery'
 import { convert } from '../conversion.js'
+import format from 'format-duration'
 
 const Conversion = window.Conversion
 const api = new API(MessagesViewerConfig)
@@ -86,15 +90,17 @@ export default {
       acquiring: false,
       types,
       units,
-      from: 0
+      from: 0,
+      to: null
     }
   },
   methods: {
+    format,
     allTimeHref (key) {
       return api.allHref(this.type, this.$store.getters['driconx/ACTIVE_ESIDS'], [key])
     },
     acquiringHref (key) {
-      return api.allHref(this.type, this.$store.getters['driconx/ACTIVE_ESIDS'], [key], this.from)
+      return api.allHref(this.type, this.$store.getters['driconx/ACTIVE_ESIDS'], [key], this.from, this.to)
     },
     startAcquisition () {
       api.getServerTime((r) => (this.startTime = r))
@@ -132,7 +138,7 @@ export default {
   },
   watch: {
     acquiring (acquiring) {
-      api.getServerTime((t) => (this.from = t))
+      api.getServerTime(t => { acquiring ? this.from = t : this.to = t })
     }
   },
   computed: {
@@ -148,7 +154,16 @@ export default {
       if (typeof this.type === 'undefined') {
         return '#'
       }
-      return api.allHref(this.type, this.$store.getters['driconx/ACTIVE_ESIDS'], Object.keys(this.$store.getters[types.SHOWN_MESSAGE_CONTENT]), this.from)
+      return api.allHref(this.type, this.$store.getters['driconx/ACTIVE_ESIDS'], Object.keys(this.$store.getters[types.SHOWN_MESSAGE_CONTENT]), this.from, this.to)
+    },
+    acquiringLength () {
+      if (this.to === null) {
+        return null
+      }
+
+      const durationsec = this.to - this.from
+      const mspart = Math.floor(durationsec * 1000) - Math.floor(durationsec) * 1000
+      return format(durationsec * 1000) + '.' + mspart
     }
   },
   created () {

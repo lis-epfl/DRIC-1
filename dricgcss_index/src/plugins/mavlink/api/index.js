@@ -36,17 +36,20 @@ const API = function () {
   }
 
   this.allHref = function (messageType, esidList = [], paramList = [], from = 0, to = undefined) {
+    const query = {
+      esid: esidList,
+      param: paramList,
+      from
+    }
+    if (typeof to !== 'undefined' && to !== null) {
+      query.to = to
+    }
     return Url.format({
       protocol: Config.http,
       hostname: Config.hostname,
       port: Config.port,
       pathname: `/mavlink/downloadt/${messageType}`,
-      query: {
-        esid: esidList,
-        param: paramList,
-        from,
-        to
-      }
+      query
     })
   }
 }

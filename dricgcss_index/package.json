@@ -20,6 +20,7 @@
     "datatables.net": "^1.10.12",
     "dataview-getstring": "^0.1.0",
     "expr-eval": "^1.0.0-rc.3",
+    "format-duration": "^1.0.0",
     "jquery": "^3.1.1",
     "jquery-ui": "^1.12.1",
     "string-hash": "^1.1.1",
