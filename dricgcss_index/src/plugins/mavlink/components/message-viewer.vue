@@ -99,9 +99,6 @@ export default {
     startAcquisition () {
       api.getServerTime((r) => (this.startTime = r))
     },
-    downloadAll () {
-
-    },
     getQuantityFor (unit) {
       for (let q in Conversion.quantities) {
         if (Conversion.quantities[q].indexOf(unit) >= 0) {
