@@ -1,8 +1,74 @@
 import dric
 import dric.support
+import random
+import string
 from lxml import etree
 
 class MavCommandPlugin(dric.Plugin):
+
+    def __init__(self, *args, **kwargs):
+        self.commands = dict()
+        self.subscribers = dict()
+
+    @dric.websocket('mavlink_commands_acknowledgement', '/mavlink/command/ack', ['CMD_ACK'])
+    def cmd_ack_ws(self, ws, request):
+        """
+        The CMD_ACK subprotocol: all commands have the form 'command:parameter1'.
+            - "sub:{id}": subscribe to id. Will not subscribe if a subscriber already exists for {id}
+            - "subf:{id}": force subscribe to id
+            - "unsub:{id}": unsubscribe from id
+            - "close:": unsubscribe from all, close connection
+            - "list:{command}": unordered list. List all subscribed {id}, prefixed with {command}. Example: "ul:li" will trigger a message "li:{id}"
+            - "li:{id}": list item, no action   
+            - "endlist:": no more items to list
+            - "nop:": nothing to do
+            - "msg:{id}:{message}": message 
+        """
+        msg = ws.wait()
+        while msg is not None:
+            if msg == 'close:':
+                return
+            elif msg.startswith('sub:'):            # subscribe if not already subscribed
+                subto = msg[len('sub:'):]
+                if subto not in self.subscribers:
+                    self.subscribers[subto] = ws
+                    ws.send(unicode('sub:{}'.format(subto)))
+                else:
+                    ws.send(unicode('nop:'))
+            elif msg.startswith('subf:'):            # always subscribe
+                subto = msg[len('subf:'):]
+                if subto in self.subscribers:
+                    self.subscribers[subto].send('unsub:forced') 
+                self.subscribers[subto] = ws
+                ws.send(unicode('sub:{}'.format(subto)))
+            elif msg.startswith('unsub:'):          # unsubscribe
+                subto = msg[len('unsub:'):]
+                if subto in self.subscribers:
+                    self.subscribers.pop(subto)
+                    ws.send(unicode('unsub:{}'.format(subto)))
+                else:
+                    ws.send(unicode('nop:'))
+            elif msg.startswith('list:'):
+                command = msg[len('list:'):]
+                [ws.send(unicode('{}:{}'.format(command, key))) for key in self.subscribers if self.subscribers[key] == ws]
+                ws.send(unicode('endlist:'))
+            else:
+                ws.send(unicode('error:malformed command "{}"'.format(msg)))
+            msg = ws.wait()
+
+    @dric.on('MAVLINK')
+    def cmd_ack(self, name, esid, message):
+        if name != 'COMMAND_ACK':
+            return
+        command = message['command']
+        result = message['result']
+        key = (esid, command)
+        if key not in self.commands:
+            return
+        ack_random = self.commands[key]
+        if ack_random in self.subscribers:
+            self.subscribers[ack_random].send(unicode('msg:{}:{}'.format(ack_random, result)))
+
     @dric.route('mavlink_send_command', '/mavlink/command/<esid>/<command>')
     def send_command(self, esid, command, request):
         parameters = request.form.getlist('p[]')
@@ -36,7 +102,12 @@ class MavCommandPlugin(dric.Plugin):
         }
         
         dric.bus.publish('send_MAV_CMD', esid, 'COMMAND_LONG', command_parameters)
-        return dric.Response('', status=204)
+        
+        ack_random = ''.join(random.choice(string.letters+string.digits) for _ in range(512))
+        key = (esid, command_id)
+        self.commands[key] = ack_random
+        
+        return dric.Response(ack_random)    # use this random to identify the reply to the command
 
 class MavCommandPluginDebugger(dric.Plugin):
     def __init__(self):

@@ -1,10 +1,63 @@
 import $ from 'jquery'
 import Url from 'url'
 import WebSocketClient from 'websocket-datasource'
+import WebSocketJs from 'websocket.js'
 
 import {Config, DatasourceConfig} from '../config'
 
+const ACKAPI = function () {
+  const url = Url.format({
+    protocol: Config.ws,
+    hostname: Config.hostname,
+    port: Config.port,
+    pathname: '/mavlink/command/ack'
+  })
+
+  const websocket = new WebSocketJs(url, 'CMD_ACK')
+  const cbsTimeouts = {}
+  const cbsAcknowledge = {}
+  const timers = {}
+
+  websocket.onmessage = function (msg) {
+    const [command, argument] = msg.data.split(/:(.+)?/, 2)
+    console.log(command, argument)
+    switch (command) {
+      case 'sub':
+        window.clearTimeout(timers[argument])
+        timers[argument] = window.setTimeout(function () {
+          websocket.send(`unsub:${argument}`)
+          cbsTimeouts[argument]
+        }, 30000)
+        break
+      case 'unsub':
+        delete cbsTimeouts[argument]
+        delete cbsAcknowledge[argument]
+        delete timers[argument]
+        break
+      case 'msg':
+        const [ackid, status] = argument.split(/:(.+)?/, 2)
+        window.clearTimeout(timers[ackid])
+        cbsAcknowledge[ackid](status)
+        websocket.send(`unsub:${ackid}`)
+        break
+      default:
+        console.warn(command, argument)
+    }
+  }
+
+  this.subscribe = function (ackid, cbAcknowledge, cbTimeout) {
+    websocket.send(`sub:${ackid}`)
+    cbsTimeouts[ackid] = cbTimeout
+    cbsAcknowledge[ackid] = cbAcknowledge
+    timers[ackid] = window.setTimeout(function () {
+      websocket.send(`unsub:${ackid}`)
+      cbTimeout()
+    }, 30000)
+  }
+}
+
 const API = function () {
+  const ack = new ACKAPI()
   this.getServerTime = function (callback) {
     /** Return server time in seconds */
     const pathname = '/mavlink/time'
@@ -80,14 +133,21 @@ const API = function () {
     })
   }
 
-  this.sendCommand = function (esid, command, parameters) {
+  this.sendCommand = function (esid, command, parameters, cbAcknowledge, cbTimeout) {
+    if (typeof cbAcknowledge === 'undefined') {
+      cbAcknowledge = function () {}
+    }
+    if (typeof cbTimeout === 'undefined') {
+      cbTimeout = function () {}
+    }
+
     const url = Url.format({
       protocol: Config.http,
       hostname: Config.hostname,
       port: Config.port,
       pathname: `/mavlink/command/${esid}/${command}`
     })
-    return $.post(url, {p: parameters})
+    return $.post(url, {p: parameters}, (ackid) => ack.subscribe(ackid, cbAcknowledge, cbTimeout))
   }
 }
 

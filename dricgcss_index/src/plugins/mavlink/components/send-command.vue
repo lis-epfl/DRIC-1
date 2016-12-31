@@ -22,6 +22,7 @@
           <input type="text" class="form-control" :id="'paramid'+key" :placeholder="'PARAM' + key" v-model="param[key]">
         </div>
         <button role="submit" class="btn btn-success" v-on:click.prevent="send">Send</button>
+        <span :class="'label label-' + ['success', 'warning', 'danger', 'danger', 'danger'][status]" v-if="status > -1">{{['ACCEPTED', 'TEMPORARILY_REJECTED', 'DENIED', 'UNSUPPORTED', 'FAILED'][status]}}</span>
       </form>
     </div>
   </div>
@@ -49,7 +50,8 @@ export default {
         '5': null,
         '6': null,
         '7': null
-      }
+      },
+      status: -1
     }
   },
   computed: {
@@ -78,6 +80,7 @@ export default {
         for (let i in this.param) {
           this.param[i] = null
         }
+        this.status = -1
       })
     }
   },
@@ -90,9 +93,10 @@ export default {
       this.commands = json
     },
     send () {
+      this.status = -1
       for (var esid of this.$store.getters['driconx/ACTIVE_ESIDS']) {
         const commandId = this.commands.find(c => c.name === this.selectedCommand).id
-        api.sendCommand(esid, commandId, Object.values(this.param))
+        api.sendCommand(esid, commandId, Object.values(this.param), status => (this.status = status))
       }
     }
   },

@@ -26,6 +26,7 @@ class FileLikeUDPSender(object):
         self.socket = socket
         self.address = address
     def write(self, buf):
+        print(self.address)
         self.socket.sendto(buf, self.address)
 
 class UDPSender(object):
@@ -81,6 +82,7 @@ class DriconxPlugin(dric.Plugin):
         self.connections = {}
         self.sockets = {}
         self.udpsender = UDPSender()
+        self.senders = {}
 
     def connect(self, type, address, port, binding, connection):
         typesocks = {'tcp': socket.SOCK_STREAM, 'udp': socket.SOCK_DGRAM}
@@ -292,7 +294,9 @@ class DriconxPlugin(dric.Plugin):
 
     @dric.on('send_MAV_CMD')
     def send_mav_cmd(self, esid, command, parameters):
-        binding = self.get_binding_for_esid(esid)
+        if esid not in self.senders:
+            self.senders[esid] = self.get_binding_for_esid(esid)
+        binding = self.senders[esid]
         module = inspect.getmodule(binding)
 
         # if command is a string, try to find the corresponding id#
@@ -324,7 +328,7 @@ class DriconxPlugin(dric.Plugin):
         if binding_name not in self.bindings:
             raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
         reply_address = self.connections[connection_name]['reply_address']
-        return self.bindings[binding_name]()(self.udpsender.writer(reply_address))
+        return self.bindings[binding_name]()(self.udpsender.writer(reply_address), srcSystem=255)
         
 driconxplugin = DriconxPlugin()
 dric.register(__name__, driconxplugin)
