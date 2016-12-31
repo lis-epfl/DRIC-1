@@ -48,7 +48,6 @@ class MavlinkIndex(HashIndex):
 
 class MavlinkListener(dric.Plugin):
 
-
     def __init__(self):
         self.timeref = 0
         self.messages_count = {}
@@ -95,8 +94,6 @@ class MavlinkListener(dric.Plugin):
             source_name = "mavlink/messages_count_per_second${}".format(esid)
             dric.add_datasource(source_name, datasource)
         
-
-
         # statistics
         self.messages_count[esid] += 1
         if name not in self.messages_stats[esid]:
