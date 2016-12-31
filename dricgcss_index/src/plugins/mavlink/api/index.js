@@ -9,7 +9,7 @@ const API = function () {
     /** Return server time in seconds */
     const pathname = '/mavlink/time'
     const url = Url.format({protocol: 'http', port: Config.port, hostname: Config.hostname, pathname})
-    $.get(url, (r) => callback(r))
+    return $.get(url, (r) => callback(r))
   }
 
   this.createMessageTypeWebsocket = function (esid, messageType) {
@@ -32,7 +32,7 @@ const API = function () {
       port: Config.port,
       pathname: '/mavlink/units'
     })
-    $.getJSON(url, callback)
+    return $.getJSON(url, callback)
   }
 
   this.allHref = function (messageType, esidList = [], paramList = [], from = 0, to = undefined) {
@@ -51,6 +51,43 @@ const API = function () {
       pathname: `/mavlink/downloadt/${messageType}`,
       query
     })
+  }
+
+  this.getAvailableCommands = function (esids, callback) {
+    const calls = []
+    let commands = []
+    console.log(esids)
+    // mergedArray.filter((e, i) =>  commands.indexOf(e) === i);
+    for (let esid of esids) {
+      const url = Url.format({
+        protocol: Config.http,
+        hostname: Config.hostname,
+        port: Config.port,
+        pathname: `/driconx/${esid}/cmd`
+      })
+      calls.push($.getJSON(url, callback))
+    }
+    console.log(calls)
+    $.when.apply(null, calls).then(function () {
+      // Concatenate commands
+      for (let arg of arguments) {
+        if (typeof arg !== 'undefined') {
+          commands = commands.concat(arg[0])
+        }
+      }
+      // Remove doublons
+      commands.filter((e, i) => commands.indexOf(e) === i)
+    })
+  }
+
+  this.sendCommand = function (esid, command, parameters) {
+    const url = Url.format({
+      protocol: Config.http,
+      hostname: Config.hostname,
+      port: Config.port,
+      pathname: `/mavlink/command/${esid}/${command}`
+    })
+    return $.post(url, {p: parameters})
   }
 }
 

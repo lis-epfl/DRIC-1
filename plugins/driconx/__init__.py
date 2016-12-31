@@ -5,3 +5,4 @@ from . import mavlink_errors
 from . import filtering
 from . import units_conversion
 from . import mavlink_rawdb
+from . import mavlink_commands

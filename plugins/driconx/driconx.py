@@ -11,12 +11,28 @@ from json import loads, dumps
 from logging import getLogger
 from hashlib import sha1
 from time import time
+from past.builtins import basestring
+import inspect
+import re
 
 _logger = getLogger('dric.driconx')
 
 class driconxws(dric.funpass):
     def __init__(self, *args, **kwargs):
         return super(driconxws, self).__init__("driconxws-funpass", *args, **kwargs)
+
+class FileLikeUDPSender(object):
+    def __init__(self, socket, address):
+        self.socket = socket
+        self.address = address
+    def write(self, buf):
+        self.socket.sendto(buf, self.address)
+
+class UDPSender(object):
+    def __init__(self): 
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
+    def writer(self, address):
+        return FileLikeUDPSender(self.socket, address)
 
 class ConnectionSubroutine(object):
     def __init__(self, mavlink, connection, update_driconxwsockets):
@@ -26,11 +42,16 @@ class ConnectionSubroutine(object):
         self.connection['systems'] = []
         self.prefix = self.connection['name'] + '-'
         self.update_driconxwsockets = update_driconxwsockets
+        self.reply_socket = None
+        self.connection['reply_address'] = None
 
     def __call__(self, sock):
         try:
             while True:
-                data = sock.recv(1024)
+                data, address = sock.recvfrom(1024)
+
+                self.connection['reply_address'] = address
+
                 dric.bus.publish('MAVLINK_RAW', self.connection['name'], data, self.mavlink)
                 sleep(0.01) # security
                 try:
@@ -59,6 +80,7 @@ class DriconxPlugin(dric.Plugin):
         self.DRICONXWS_MESSAGE_HEADER = compile(r"^(/\S+)\s(.*)")
         self.connections = {}
         self.sockets = {}
+        self.udpsender = UDPSender()
 
     def connect(self, type, address, port, binding, connection):
         typesocks = {'tcp': socket.SOCK_STREAM, 'udp': socket.SOCK_DGRAM}
@@ -76,7 +98,7 @@ class DriconxPlugin(dric.Plugin):
     @dric.websocket('driconx_connect', '/driconx/ws')
     def connectws(self, ws, request):
         self.driconxwsockets.append(ws)
-        m = 'A'
+        m = 'A' # send A for update
         while m == 'A':
             ws.send(unicode(dumps([self.connections[cname] for cname in self.connections])))
             m = ws.wait()
@@ -103,11 +125,17 @@ class DriconxPlugin(dric.Plugin):
                 connection = self.connections[connection_name]
                 e = etree.SubElement(root, 'connection')
                 for key in connection:
+                    # maybe implement a visitor pattern or similar for special cases. Or make all values implement a 'toXml(parent)' function...
                     if key == 'systems':
                         systems = etree.SubElement(e, 'systems')
                         for system_name in connection[key]:
                             system = etree.SubElement(systems, 'system')
                             system.text = unicode(system_name)
+                    elif key == 'reply_address':
+                        reply_address_element = etree.SubElement(e, 'reply')
+                        host, port = connection[key]
+                        etree.SubElement(reply_address_element, 'port').text = str(port)
+                        etree.SubElement(reply_address_element, 'host').text = str(host)
                     else:
                         parameter = etree.SubElement(e, key)
                         parameter.text = unicode(connection[key])
@@ -225,6 +253,78 @@ class DriconxPlugin(dric.Plugin):
         else:
             return dric.Response('Not acceptable', status=406)
 
+    @dric.route('driconx_cmd_list', '/driconx/<connection>/cmd')
+    def connection_cmd(self, connection, request):
+        """ show all available commands for the connection """
+        connection = connection.split("-")[0]   # also accept esid
+        if connection not in self.connections:
+            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection))
+        binding_name = self.connections[connection]['binding']
+        if binding_name not in self.bindings:
+            raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
+        
+        binding = self.bindings[binding_name]()(None)
+        module = inspect.getmodule(binding)
+        output = []
+        for cmd in module.enums['MAV_CMD']:
+            entry = module.enums['MAV_CMD'][cmd]
+            output.append({'name':entry.name, 'id':cmd, 'description':entry.description, 'param':entry.param})
+
+        if dric.support.accept.xml_over_json(request):
+            root = etree.Element('commands')
+            root.set('connection', connection)
+            root.set('binding', binding_name)
+            for entry in output:
+                c = etree.SubElement(root, 'command')
+                c.set('name', entry['name'])
+                c.set('id', str(entry['id']))
+                d = etree.SubElement(c, 'description')
+                d.text = entry['description']
+                for key in entry['param']:
+                    p = etree.SubElement(c, 'parameter')
+                    p.set('index', str(key))
+                    p.text = entry['param'][key]
+            return dric.XMLResponse(root)
+        elif dric.support.accept.json_over_xml(request):
+            return dric.JSONResponse(output)
+        else:
+            raise dric.exceptions.NotAcceptable()
+
+    @dric.on('send_MAV_CMD')
+    def send_mav_cmd(self, esid, command, parameters):
+        binding = self.get_binding_for_esid(esid)
+        module = inspect.getmodule(binding)
+
+        # if command is a string, try to find the corresponding id#
+        if isinstance(command, basestring):
+            command_id_name = 'MAVLINK_MSG_ID_{}'.format(command)
+
+            if not hasattr(module, command_id_name):
+                raise ValueError('No such command: "{}".'.format(command_id_name))
+
+            command = getattr(module, command_id_name)
+        
+        # with command the command id, find the corresponding message class from the map
+        if command not in module.mavlink_map:
+            raise KeyError('Command id "{}" not found in mavlink map.'.format(command))
+        message_class = module.mavlink_map[command]
+
+        # reorder parameters, and keep only values
+        parameters = [parameters[param_name] for param_name in message_class.fieldnames]
+
+        # send message
+        binding.send(message_class(*parameters))
+
+    def get_binding_for_esid(self, esid):
+        connection_name, system_id = esid.split('-')
+        if connection_name not in self.connections:
+            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection_name))
+        binding_name = self.connections[connection_name]['binding']
+        socket = self.sockets[connection_name]
+        if binding_name not in self.bindings:
+            raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
+        reply_address = self.connections[connection_name]['reply_address']
+        return self.bindings[binding_name]()(self.udpsender.writer(reply_address))
         
 driconxplugin = DriconxPlugin()
 dric.register(__name__, driconxplugin)

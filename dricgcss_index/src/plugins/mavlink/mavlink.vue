@@ -17,6 +17,9 @@
             <div class="col-md-4">
               <mavlink-message-viewer></mavlink-message-viewer>
             </div>
+            <div class="col-md-4">
+              <mavlink-send-command></mavlink-send-command>
+            </div>
           </div>
       </section>
     </section>
@@ -27,11 +30,13 @@
 import Battery from './components/battery.vue'
 import MessageOverview from './components/messages-overview.vue'
 import MessageViewer from './components/message-viewer.vue'
+import SendCommand from './components/send-command.vue'
 export default {
   components: {
     'mavlink-battery': Battery,
     'mavlink-messages-overview': MessageOverview,
-    'mavlink-message-viewer': MessageViewer
+    'mavlink-message-viewer': MessageViewer,
+    'mavlink-send-command': SendCommand
   }
 }
 </script>

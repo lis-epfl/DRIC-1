@@ -1,5 +1,2 @@
-export default {
-  http: 'http',
-  hostname: '//localhost',
-  port: '80'
-}
+import config from '../../../config.js'
+export default config

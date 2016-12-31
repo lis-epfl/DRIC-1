@@ -39,11 +39,13 @@
 </template>
 
 <script>
-import WebSocketClient from 'websocket.js'
 import Callout from './components/callout.vue'
 import Controls from './components/controls.vue'
 import Connection from './components/connection.vue'
 import Aggregs from './components/aggregs.vue'
+import API from './api'
+
+const api = new API()
 
 export default {
   name: 'driconx',
@@ -53,46 +55,36 @@ export default {
     'driconx-connection': Connection,
     'driconx-aggregs': Aggregs
   },
-  computed: {
-    drichost () {
-      return this.$store.state.drichost
-    }
-  },
   methods: {
     disconnect (connection) {
       // Click on disconnect button
       connection.connecting = true
-      window.$.ajax({
-        url: 'http://' + this.drichost + '/driconx/disconnect',
-        method: 'post',
-        data: JSON.stringify(connection)
-      }).done(function (data, textStatus, jqXHR) {
-        connection.connecting = false
-        connection.connected = false
-        connection.status = null
-      }).fail(function (jqXHR, textStatus, errorThrown) {
-        connection.connecting = false
-        connection.connected = true
-        connection.status = errorThrown
-      })
+      api.disconnect(connection,
+        (data, textStatus, jqXHR) => {
+          connection.connecting = false
+          connection.connected = false
+          connection.status = null
+        },
+        (jqXHR, textStatus, errorThrown) => {
+          connection.connecting = false
+          connection.connected = true
+          connection.status = errorThrown
+        })
     },
     connect (connection) {
       connection.connecting = true
-      window.$.ajax({
-        url: 'http://' + this.drichost + '/driconx/new',
-        method: 'put',
-        data: JSON.stringify(connection)
-      }).done(function (data, textStatus, jqXHR) {
-        connection.connecting = false
-        connection.connected = true
-        connection.status = null
-      }).fail(function (jqXHR, textStatus, errorThrown) {
-        connection.connecting = false
-        connection.connected = false
-        connection.status = errorThrown
-      })
+      api.connect(connection,
+        (data, textStatus, jqXHR) => {
+          connection.connecting = false
+          connection.connected = true
+          connection.status = null
+        },
+        (jqXHR, textStatus, errorThrown) => {
+          connection.connecting = false
+          connection.connected = false
+          connection.status = errorThrown
+        })
     }
-
   },
   data () {
     return {
@@ -103,9 +95,8 @@ export default {
     }
   },
   beforeCreate () {
-    let drichost = this.$store.state.drichost
     let self = this
-    this.ws = new WebSocketClient('ws://' + drichost + '/driconx/ws')
+    this.ws = api.getWebSocket()
     this.ws.onmessage = function (event) {
       var data = JSON.parse(event.data)
       self.connected = true
@@ -119,9 +110,7 @@ export default {
     this.ws.onclose = function () {
       self.connected = false
     }
-    window.$.getJSON('http://' + drichost + '/driconx/bindings', function (bindings) {
-      self.bindings = bindings
-    })
+    api.getBindings((bindings) => (this.bindings = bindings))
   }
 }
 </script>
