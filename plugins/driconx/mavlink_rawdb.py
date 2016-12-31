@@ -7,6 +7,7 @@ from os.path import join
 import math
 import binascii
 import traceback
+import eventlet
 
 PACKET_SIZE = 18
 
@@ -45,6 +46,7 @@ class MavlinkRawDBPlugin(dric.Plugin):
             timestamp = range_from
             mavlink = channel.mavlink(None)
             while timestamp < range_to:
+                eventlet.sleep(0.0001) # security. 
                 try:
                     try:
                         timestamp, offset, length = struct.unpack('!dQh', fi.read(PACKET_SIZE))
