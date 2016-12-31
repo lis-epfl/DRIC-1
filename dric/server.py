@@ -26,7 +26,6 @@ def _app(environ, start_response):
         response.headers.add('Access-Control-Allow-Origin', '*')
     except:
         response.get_headers = funCORS
-	print(type(response))
     return response(environ, start_response)
 
 class Server(object):
