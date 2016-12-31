@@ -4,8 +4,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import Request, Response
 import dric
 from future.utils import raise_from
-
-
+import traceback
 
 _logger = logging.getLogger('dric.router')
 _url_map = Map()
@@ -28,6 +27,8 @@ def dispatch(request):
         return e
     except Exception as e:
         _logger.warn('Exception raised for endpoint %s: %s', endpoint, e)
+        if dric.env == 'dev':
+            traceback.print_stack()
     else:
         try:
             return rep[0]
