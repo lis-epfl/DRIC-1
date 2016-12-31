@@ -4,7 +4,10 @@ from os.path import dirname, join, abspath, splitext
 from os import listdir
 from logging import getLogger
 from yaml import load as reader_yaml_load
-from configparser import ConfigParser
+try:
+    from configparser import ConfigParser
+except:
+    from ConfigParser import ConfigParser
 
 _logger = getLogger('dric.support.configuration_pass')
 
