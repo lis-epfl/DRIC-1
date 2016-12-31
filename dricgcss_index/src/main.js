@@ -15,12 +15,12 @@ import './assets/style.less'
 
 // Javascript libararies
 import 'expose?$!expose?jQuery!jquery'
+import 'expose?select2!select2'
 import 'jquery-ui'
 import 'bootstrap'
 import 'bootstrap-slider'
 import 'datatables.net'
 import '../node_modules/admin-lte/dist/js/app.min.js'
-
 import flatten from 'array-flatten'
 
 // Utility functions
