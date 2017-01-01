@@ -292,7 +292,7 @@ class DriconxPlugin(dric.Plugin):
         else:
             raise dric.exceptions.NotAcceptable()
 
-    @dric.on('send_MAV_CMD')
+    @dric.on('SEND_MAVLINK')
     def send_mav_cmd(self, esid, command, parameters):
         if esid not in self.senders:
             self.senders[esid] = self.get_binding_for_esid(esid)

@@ -101,7 +101,7 @@ class MavCommandPlugin(dric.Plugin):
             'param7': float(parameters[6])
         }
         
-        dric.bus.publish('send_MAV_CMD', esid, 'COMMAND_LONG', command_parameters)
+        dric.bus.publish('SEND_MAVLINK', esid, 'COMMAND_LONG', command_parameters)
         
         ack_random = ''.join(random.choice(string.letters+string.digits) for _ in range(512))
         key = (esid, command_id)
@@ -113,7 +113,7 @@ class MavCommandPluginDebugger(dric.Plugin):
     def __init__(self):
         self.sent_commands = []
 
-    @dric.on('send_MAV_CMD')
+    @dric.on('SEND_MAVLINK')
     def listen(self, esid, command, parameters):
         self.sent_commands.append((esid, command, parameters))
 
