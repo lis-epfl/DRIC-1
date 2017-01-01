@@ -7,9 +7,8 @@ When a Mavlink message is received, a `MAVLINK` event is published on the event 
 
 | Parameter | Description                        |
 |-----------|------------------------------------|
-| name      | The message name; e.g. `HEARTBEAT`. |
 | esid      | The extended system id. See below. |
-| message   | The message content as a dictionnary fieldname => value |
+| mav_message   | The message as parsed by pymavlink. |
 
 
 ## `SEND_MAVLINK`

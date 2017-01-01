@@ -57,7 +57,9 @@ class MavCommandPlugin(dric.Plugin):
             msg = ws.wait()
 
     @dric.on('MAVLINK')
-    def cmd_ack(self, name, esid, message):
+    def cmd_ack(self, esid, mav_message):
+        name = mav_message.get_type()
+        message = mav_message.to_dict()
         if name != 'COMMAND_ACK':
             return
         command = message['command']

@@ -72,7 +72,9 @@ class MavlinkListener(dric.Plugin):
         self.timeref = time()
 
     @dric.on('MAVLINK')
-    def mavlink_message_received(self, name, esid, message):
+    def mavlink_message_received(self, esid, mav_message):
+        name = mav_message.get_type()
+        message = mav_message.to_dict()
         # add esid
         if esid not in self.esids:
             self.esids.append(esid)

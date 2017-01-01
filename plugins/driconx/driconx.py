@@ -59,12 +59,12 @@ class ConnectionSubroutine(object):
                     messages = self.mavlink.parse_buffer(data)
                     if messages is not None:
                         #print("{}:{}".format(time(), len(messages)))
-                        for message in messages:
-                            esid = self.prefix + str(message.get_srcSystem())
+                        for mav_message in messages:
+                            esid = self.prefix + str(mav_message.get_srcSystem())
                             if esid not in self.connection['systems']:
                                 self.connection['systems'].append(esid)
                                 self.update_driconxwsockets()
-                            dric.bus.publish('MAVLINK', message.get_type(), esid, message.to_dict())
+                            dric.bus.publish('MAVLINK', esid, mav_message)
 
                 except Exception as e:
                     print(e)
