@@ -106,6 +106,7 @@ export default {
         var c = self.connections[i]
         if (!('hover' in c)) c['hover'] = false
       }
+      api.getBindings((bindings) => (self.bindings = bindings))
     }
     this.ws.onclose = function () {
       self.connected = false
