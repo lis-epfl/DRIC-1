@@ -17,6 +17,7 @@ import driconx
 import mavric
 import dric.debug
 import dsws
+import parameters
 
 # IMPORT YOUR COMPONENTS HERE
 # import ...
