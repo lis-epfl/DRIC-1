@@ -142,6 +142,9 @@ export default {
       }
     }
   },
-  created () { watchEsidChange.call(this, this.openDatasource) }
+  created () {
+    this.openDatasource(this.$store.getters['driconx/ACTIVE_ESIDS'])
+    watchEsidChange.call(this, this.openDatasource)
+  }
 }
 </script>
