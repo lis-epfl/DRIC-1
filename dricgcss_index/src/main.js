@@ -16,6 +16,8 @@ import './assets/style.less'
 // Javascript libararies
 import 'expose?$!expose?jQuery!jquery'
 import 'expose?select2!select2'
+import 'expose?flot!../node_modules/flot/jquery.flot.js'
+import 'expose?flotTime!../node_modules/flot/jquery.flot.time.js'
 import 'jquery-ui'
 import 'bootstrap'
 import 'bootstrap-slider'
