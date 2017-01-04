@@ -1,5 +1,5 @@
 <template>
-  <section class="content body page" id="vapp-charts">
+  <section class="content body page row" id="vapp-charts">
     <div style="width:100%; height:400px" id="samples-chart" @mousewheel="zoom" @mousemove="pan" @mousedown="mousedown" @mouseup="mouseup" @mouseexit="mouseup" @mouseenter="mouseup">
     </div>
     <div class="btn-group">

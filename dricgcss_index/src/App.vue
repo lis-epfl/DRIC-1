@@ -4,7 +4,7 @@
       <dric-navbar></dric-navbar>
     </header>
     <dric-sidebar></dric-sidebar>
-    <div class="content-wrapper" style="position:relative">
+    <div class="content-wrapper" :style="{'min-height': cwHeight}">
       <keep-alive>
         <router-view></router-view>
       <keep-alive>
@@ -26,10 +26,30 @@ components['dric-navbar'] = Navbar
 
 export default {
   name: 'app',
-  components: components
+  components: components,
+  data () {
+    return {
+      cwHeight: 'initial'
+    }
+  },
+  methods: {
+    handleResize () {
+      this.cwHeight = (window.innerHeight - window.$('.navbar').height()) + 'px'
+    }
+  },
+  mounted: function () {
+    window.addEventListener('resize', this.handleResize)
+    this.handleResize()
+  },
+  beforeDestroy: function () {
+    window.removeEventListener('resize', this.handleResize)
+  }
 }
 
 </script>
 
 <style>
+.content-wrapper {
+  position: relative;
+}
 </style>
