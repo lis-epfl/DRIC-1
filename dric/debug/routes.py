@@ -5,10 +5,6 @@ class RouteListPlugin(dric.Plugin):
 
     def __init__(self):
         self.routes = list()
-    
-    @dric.route('dric_debug_routes', '/_debug')
-    def la(self, request):
-        return dric.Response('LDOPJI')
 
     """ This plugin show a list of routes """
     @dric.route('dric_debug_routes', '/_debug/routes')
