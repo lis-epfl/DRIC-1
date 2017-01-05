@@ -10,5 +10,7 @@ def websocket(endpoint, route, supported_protocols=[]):
             return ws
         handler.route = route
         handler.event = endpoint
+        handler.supported_protocols = supported_protocols
+        handler.ws = True
         return handler
     return websocket_wrap
