@@ -1,0 +1,47 @@
+URL=ws://localhost:9555/map/waypoint
+SUBPROTOCOL=jwp
+#jwp stands for json waypoint protocol
+
+.no
+echo on
+>{"command":"_GET_STATE","data":{"esid":""}}
+<
+echo off
+
+.json
+>{"command":"WS_CLEAR_ALL","data":{},"esid":"f3b33b6868-5"}
+<{"command":"MISSION_ACK","data":{"type":1},"esid":"f3b33b6868-5"}
+
+.no
+echo on
+>{"command":"_GET_STATE","data":{"esid":""}}
+<
+>{"command":"WS_READ_LIST","data":{"esid":"f3b33b6868-5"},"esid":"f3b33b6868-5"}
+<
+echo off
+
+.json
+>{"command":"WS_READ_LIST","data":{"esid":"f3b33b6868-5"},"esid":"f3b33b6868-5"}
+<{"command":"MISSION_COUNT","data":{"count":0},"esid":"f3b33b6868-5"}
+
+>{"command":"WS_WRITE_LIST","data":{"waypoints":[]},"esid":"f3b33b6868-5"}
+<{"command":"MISSION_ACK","data":{"type":0},"esid":"f3b33b6868-5"}
+>{"command":"WS_READ_LIST","data":{"esid":"f3b33b6868-5"},"esid":"f3b33b6868-5"}
+<{"command":"MISSION_COUNT","data":{"count":0},"esid":"f3b33b6868-5"}
+
+>{"command":"WS_WRITE_LIST","data":{"waypoints":[{"frame":0,"command":16,"autocontinue":0,"param1":1,"param2":1,"param3":0,"param4":0,"x":0,"y":0,"z":0},{"frame":0,"command":16,"autocontinue":0,"param1":1,"param2":1,"param3":0,"param4":0,"x":0,"y":0,"z":0}]},"esid":"f3b33b6868-5"}
+<{"command":"MISSION_ACK","data":{"type":0},"esid":"f3b33b6868-5"}
+
+>{"command":"WS_SET_CURRENT","data":{"seq":0},"esid":"f3b33b6868-5"}
+<{"command":"MISSION_CURRENT","data":{"seq":0},"esid":"f3b33b6868-5"}
+
+>{"command":"WS_READ_LIST","data":{"esid":"f3b33b6868-5"},"esid":"f3b33b6868-5"}
+<{"command":"MISSION_COUNT","data":{"count":2},"esid":"f3b33b6868-5"}
+
+.no
+echo on
+<
+<
+
+>{"command":"_GET_STATE","data":{"esid":""}}
+<

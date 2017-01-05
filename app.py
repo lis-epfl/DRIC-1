@@ -18,6 +18,7 @@ import mavric
 import dric.debug
 import dsws
 import parameters
+import map
 
 # IMPORT YOUR COMPONENTS HERE
 # import ...

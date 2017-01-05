@@ -11,8 +11,8 @@ map:
         #   IF_CHANGED when the source is new or changed (default)  # NOT IMPLEMENTED
         #   ~ do not slice map automatically
         invoke:         IF_CHANGED  # NOT IMPLEMENTED
-        # zoom level, a strictly positive integer
-        zoom:           5
+        # zoom level, a strictly positive integer. Default to 5.
+        zoom:           2
 
 
         
