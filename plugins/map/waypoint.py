@@ -202,7 +202,7 @@ class MissionRequest(State):
         if not self.acknowledge:
             if event.src == SYSTEM:
                 if event.payload.get_type() == 'MISSION_ITEM':
-                    environ.push_mission_item(event.payload)
+                    environ.push_mission_item(event.esid, event.payload.to_dict())
                     return MissionRequest(event.esid, self.count, event.payload.seq + 1, self.target_system, self.target_component)
         else:
             return IdleState().next_state(event, environ)
@@ -216,6 +216,10 @@ class Environ(object):
         """
         self.wsl = wsl
         if ws is not None: self.wsl.append(ws)
+    def send_message(self, message):
+        for ws in self.wsl:
+            try: ws.send(unicode(message))
+            except: pass
 
     def push_mission_item_reached(self, esid, seq):
         message = json.dumps({
@@ -225,8 +229,7 @@ class Environ(object):
             },
             'esid': esid
         })
-        for ws in self.wsl:
-            ws.send(unicode(message))
+        self.send_message(message)
     def push_mission_current(self, esid, seq):
         message = json.dumps({
             'command': 'MISSION_CURRENT',
@@ -235,18 +238,16 @@ class Environ(object):
             },
             'esid': esid
         })
-        for ws in self.wsl:
-            ws.send(unicode(message))
+        self.send_message(message)
 
-    def push_mission_item(self, msg):
+    def push_mission_item(self, esid, data):
         message = json.dumps({
             'command': 'MISSION_ITEM',
-            'data': {
-                'msg': str(msg)
-            }
+            'esid': esid,
+            'data': data
         })
-        for ws in self.wsl:
-            ws.send(unicode(message))
+        self.send_message(message)
+        
     def push_mission_count(self, esid, count):
         message = json.dumps({
             'command': 'MISSION_COUNT',
@@ -255,8 +256,7 @@ class Environ(object):
                 'count': count
             }
         })
-        for ws in self.wsl:
-            ws.send(unicode(message))
+        self.send_message(message)
 
     def push_mission_ack(self, esid, type):
         message = json.dumps({
@@ -266,24 +266,29 @@ class Environ(object):
                 'type': type
             }
         })
-        for ws in self.wsl:
-            ws.send(unicode(message))
+        self.send_message(message)
 
 class WaypointPlugin(dric.Plugin):
     
     def __init__(self, *args, **kwargs):
         self.state = IdleState()
         self.wsl = {}
+        self.watchdogtask = None
+
+    def resetTimeout(self):
+        if self.watchdogtask is not None: self.watchdogtask.cancel()
+        def watchdogfun(): self.state = IdleState()
+        self.watchdogtask = eventlet.spawn_after(3, watchdogfun)
 
     @dric.on('MAVLINK')
     def waypointmav(self, esid, message):
-
         if message.get_type().startswith('MISSION'):
             print(message.get_type())
         environ = Environ(wsl=self.wsl.values())
         event = Event(SYSTEM, message, esid)
         try: self.state = self.state.next_state(event, environ)
         except NoStateTransitionError: return
+        self.resetTimeout()
 
     @dric.websocket('waypointws', '/map/waypoint', ['jwp'])
     def waypointws(self, ws, request):
@@ -309,6 +314,7 @@ class WaypointPlugin(dric.Plugin):
                         environ = Environ(ws=ws)
                         try:
                             self.state = self.state.next_state(event, environ)
+                            self.resetTimeout()
                         except NoStateTransitionError as e:
                             ws.send(unicode(str(NoStateTransitionErrorWsError(msg, e))))
                         except StateInitializationError as e:
