@@ -54,7 +54,7 @@ class ConnectionSubroutine(object):
                 self.connection['reply_address'] = address
 
                 dric.bus.publish('MAVLINK_RAW', self.connection['name'], data, self.mavlink)
-                sleep(0.01) # security
+                sleep(0.0001) # security
                 try:
                     messages = self.mavlink.parse_buffer(data)
                     if messages is not None:
