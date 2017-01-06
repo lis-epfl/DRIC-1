@@ -45,7 +45,7 @@
 <script>
 import TreeView from './treeview'
 import $ from 'jquery'
-import Url from 'Url'
+import Url from 'url'
 import Config from '../../config'
 import Plot from './Plot'
 

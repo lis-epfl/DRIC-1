@@ -8,7 +8,7 @@ var sid = randomstring.generate()
 var WebSocketDatasource = require('websocket-datasource')
 
 import Config from '../../config'
-import Url from 'Url'
+import Url from 'url'
 
 var maxTime = 0
 
