@@ -78,7 +78,8 @@ module.exports = {
           name: utils.assetsPath('fonts/[name].[hash:7].[ext]')
         }
       }
-    ]
+    ],
+    noParse: [/\/openlayers\//]
   },
   eslint: {
     formatter: require('eslint-friendly-formatter')

@@ -8,7 +8,7 @@ import socket
 from time import time
 from operator import itemgetter
 from struct import pack
-
+from lxml import etree
 
 _logger = getLogger('dric.dsws')
 
@@ -90,7 +90,6 @@ class DatasourceWebsocketPlugin(dric.Plugin, dric.DatasourceEndpoint):
                 self.__start_times.pop(sorted_start_times.pop()[0])
 
 
-# only time series
     @dric.route('datasources_list', '/dsws_datasources')
     def datasources_list(self, request):
         all = request.args.get('all', False, bool)
@@ -101,8 +100,18 @@ class DatasourceWebsocketPlugin(dric.Plugin, dric.DatasourceEndpoint):
             elif not (hasattr(self.source(source_name), 'noplot') and self.source(source_name).noplot is True):
                 out.append(source_name)
                 
-            
-        return dric.JSONResponse(out)
+        if dric.support.accept.xml_over_json(request):
+            root = etree.Element('datasources')
+            for source_name in out:
+                source = self.sources()[source_name]
+                s = etree.SubElement(root, 'datasource')
+                if hasattr(source, 'noplot') and source.noplot is True: s.set('noplot', 'noplot')
+                if hasattr(source, 'isTimeSerie') and source.isTimeSerie is True: s.set('isTimeSerie', 'isTimeSerie')
+                s.text = source_name
+            return dric.XMLResponse(root)
+        elif dric.support.accept.json_over_xml(request):
+            return dric.JSONResponse(out)
+        else: raise dric.exceptions.NotAcceptable()
 
     @dric.websocket('datasource', '/datasource', supported_protocols=['datasource'])
     def datasource(self, ws, request):

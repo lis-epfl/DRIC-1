@@ -36,6 +36,17 @@ const API = function () {
     .fail(cbFail)
   }
 
+  this.deleteconx = function (connection, cbDone, cbFail) {
+    const url = urlFormatter('/driconx/delete')
+    $.ajax({
+      url: url,
+      method: 'post', // Should be DELETE
+      data: JSON.stringify(connection)
+    })
+    .done(cbDone)
+    .fail(cbFail)
+  }
+
   this.getBindings = function (callback) {
     window.$.getJSON(urlFormatter('/driconx/bindings'), callback)
   }

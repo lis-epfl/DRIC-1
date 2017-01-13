@@ -45,8 +45,8 @@ import Aggreg from './aggreg.vue'
 const Aggregation = function (esidList, alias) {
   this.reason = null
   this.systemid = -1
-  this.alias = alias
   this.esidList = esidList
+  this.alias = alias
 }
 
 const LightAggreg = function (a) {

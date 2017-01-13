@@ -8,7 +8,7 @@
         <span class="small">[{{conx.binding}}]</span>
       </h3>
       <div class="box-tools pull-right">
-        <button type="button" class="btn btn-box-tool" v-if="!conx.connecting && !conx.connected" v-on:click="deleteConnection(conx)">
+        <button type="button" class="btn btn-box-tool" v-if="!conx.connecting && !conx.connected" v-on:click="$emit('deleteconx', conx)">
           <i class="fa fa-times"></i>
         </button>
       </div>

@@ -26,6 +26,7 @@
     <div class="col-md-9">
       <driconx-connection v-for="conx in connections"
       :conx="conx"
+      v-on:deleteconx="deleteconx"
       v-on:disconnect="disconnect"
       v-on:connect="connect">
     </driconx-connection>
@@ -83,6 +84,15 @@ export default {
           connection.connecting = false
           connection.connected = false
           connection.status = errorThrown
+        })
+    },
+    deleteconx (connection) {
+      // Delete a connection
+      api.deleteconx(connection,
+        (data, textStatus, jqXHR) => {},
+        (jqXHR, textStatus, errorThrown) => {
+          console.log(errorThrown)
+          this.connections.splice(this.connections.indexOf(connection), 1)
         })
     }
   },

@@ -19,6 +19,7 @@ import dric.debug
 import dsws
 import parameters
 import map
+import quickarm
 
 # IMPORT YOUR COMPONENTS HERE
 # import ...

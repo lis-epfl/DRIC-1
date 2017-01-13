@@ -56,6 +56,7 @@ function PlotRegistry () {
     for (var i = 0; i < updatedSources.length; i++) {
       var source = updatedSources[i]
       if (!(source in sources)) {
+        console.log(templateUrl)
         var url = templateUrl.replace('__SOURCE__', source)
         sources[source] = new RealTimePlotUpdate(url, 300)
         invalidate()
@@ -187,24 +188,28 @@ self.make = function (selector) {
   }
   var pauseStart
   function redraw() {
-    window.$(selector).data('plot', plot)
-    var plotdata
+    try {
+      if(window.$(selector).length > 0) {
+        window.$(selector).data('plot', plot)
+        var plotdata
 
-    if (typeof plotRegistry._data !== 'undefined' && plotRegistry._data.paused) {
-      plotdata = plotRegistry._plotdata(pauseStart)
-    } else {
-      plotdata = plotRegistry._plotdata()
+        if (typeof plotRegistry._data !== 'undefined' && plotRegistry._data.paused) {
+          plotdata = plotRegistry._plotdata(pauseStart)
+        } else {
+          plotdata = plotRegistry._plotdata()
+        }
+
+        options.xaxis.update()
+        if (typeof plotRegistry._data !== 'undefined') {
+          options.colors = plotRegistry._data.colors
+        }
+
+        plot = window.$.plot(selector, plotdata, options)
+      }
+    } finally {
+      // Animation frame won't work here
+      setTimeout(redraw, 70)
     }
-
-    options.xaxis.update()
-    if (typeof plotRegistry._data !== 'undefined') {
-      options.colors = plotRegistry._data.colors
-    }
-
-    plot = window.$.plot(selector, plotdata, options)
-
-    // Animation frame won't work here
-    setTimeout(redraw, 70)
   }
 
   function copyRealtime() {
@@ -233,55 +238,55 @@ self.make = function (selector) {
     options.yaxis._d.pan.mousedragstop()
   }
   plotRegistry.pause = () => {
-      plotRegistry._data.paused = !plotRegistry._data.paused
-      copyRealtime()
+    plotRegistry._data.paused = !plotRegistry._data.paused
+    copyRealtime()
   }
   plotRegistry.pan = (e) => {
     if (plotRegistry._data.mouseButtonDown) {
       options.yaxis._d.pan.mousedrag(e)
     }
   }
-/*
+  /*
   var vappCharts = new Vue({
-    el: '#vapp-charts',
-    data: {
-      cursor: 'default',
-      mousedown: false,
-      xaxis: 60
-    },
-    methods: {
-      pause: function (e) {
-        paused = !paused
-        copyRealtime()
-      },
-      startRecord: function () { },
-      pan: function (e) {
-        if (this.mouseButtonDown) {
-          this.cursor = 'all-scroll'
-          options.yaxis._d.pan.mousedrag(e)
-        } else {
-          this.cursor = 'default'
-        }
-      },
-      zoomAuto: options.yaxis._d.zoom.auto,
-      zoomPlus: options.yaxis._d.zoom.plus,
-      zoomMinus: options.yaxis._d.zoom.minus,
-      zoom: options.yaxis._d.zoom.mousewheel,
-      mousedown: function (e) { e.preventDefault(); this.mouseButtonDown = true; },
-      mouseup: function (e) {
-        e.preventDefault(); this.mouseButtonDown = false
-        options.yaxis._d.pan.mousedragstop()
-      },
-      clear: function () { plotRegistry.clear(); }
-    }
-  })
+  el: '#vapp-charts',
+  data: {
+  cursor: 'default',
+  mousedown: false,
+  xaxis: 60
+},
+methods: {
+pause: function (e) {
+paused = !paused
+copyRealtime()
+},
+startRecord: function () { },
+pan: function (e) {
+if (this.mouseButtonDown) {
+this.cursor = 'all-scroll'
+options.yaxis._d.pan.mousedrag(e)
+} else {
+this.cursor = 'default'
+}
+},
+zoomAuto: options.yaxis._d.zoom.auto,
+zoomPlus: options.yaxis._d.zoom.plus,
+zoomMinus: options.yaxis._d.zoom.minus,
+zoom: options.yaxis._d.zoom.mousewheel,
+mousedown: function (e) { e.preventDefault(); this.mouseButtonDown = true; },
+mouseup: function (e) {
+e.preventDefault(); this.mouseButtonDown = false
+options.yaxis._d.pan.mousedragstop()
+},
+clear: function () { plotRegistry.clear(); }
+}
+})
 */
-  /************************************
-  * REAL TIME PLOT UPDATE             *
-  *************************************/
-  var paused = false
-  var origin_date = Date.now()
-  return plotRegistry
+/************************************
+* REAL TIME PLOT UPDATE             *
+*************************************/
+var paused = false
+var origin_date = Date.now()
+return plotRegistry
 }
 
 export default self

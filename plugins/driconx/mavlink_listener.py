@@ -46,6 +46,13 @@ class MavlinkIndex(HashIndex):
         m.update(k)
         return m.digest()
 
+class MavlinkEvent(object):
+    def __init__(self, esid, mav_message, message):
+        self.esid = esid
+        self.mav_message = mav_message
+        self.message = message
+
+
 class MavlinkListener(dric.Plugin):
 
     def __init__(self):
@@ -141,8 +148,8 @@ class MavlinkListener(dric.Plugin):
         self.full_message_datasource[namesid].push(message)
     
         #dispatch event
-        event_name = 'MAVLINK/{}'.format(name)
-        self.bus.publish(event_name.upper, id=esid, message=message)
+        event_name = 'MAVLINK/{}'.format(name.upper())
+        self.bus.publish(event_name.upper(), MavlinkEvent(esid, mav_message, message))
 
     @dric.route('mavlink_message', '/mavlink/message/<esid>/<name>/<int:n>')
     def get_mavlink_message(self, esid, name, n, request=None):

@@ -1,0 +1,62 @@
+[
+  {
+  	"type": "button",
+  	"text": "Unarm",
+  	"command": [176, 50, 0, 64, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "MODE: Armed-Manual",
+  	"command": [176, 50, 0, 192, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "MODE: Armed-Stabalize",
+  	"command": [176, 50, 0, 208, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "MODE: Armed-Guided",
+  	"command": [176, 50, 0, 216, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "MODE: Armed-Auto",
+  	"command": [176, 50, 0, 156, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "NAV: Take-off",
+  	"command": [22, 50, 0, 1, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "NAV: Land",
+  	"command": [21, 50, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "NAV: Start",
+  	"command": [300, 50, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "NAV: Pause",
+  	"command": [252, 50, 0, 0, 2, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "NAV: Continue/Skip",
+  	"command": [252, 50, 0, 1, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "Set Home",
+  	"command": [179, 50, 0, 1, 0, 0, 0, 0, 0, 0]
+  },
+  {
+  	"type": "button",
+  	"text": "Go Home",
+  	"command": [20, 50, 0, 0, 0, 0, 0, 0, 0, 0]
+  }
+]

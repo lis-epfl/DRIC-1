@@ -3,8 +3,9 @@ define(function () {
 
     var FixedLengthAxis = function (lengthProvider, maxProvider) {
         this.mode = 'time';
-        this.minTickSize = [1, 'second'];
-        this.tickSize = [5, 'second'];
+        // this.minTickSize = [1, 'second'];
+        // this.tickSize = [5, 'second'];
+        this.tickSize = [0.01, 'second'];
 
         this.update = function() {
             var max = maxProvider();

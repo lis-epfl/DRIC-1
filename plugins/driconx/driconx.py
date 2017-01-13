@@ -65,12 +65,11 @@ class ConnectionSubroutine(object):
                                 self.connection['systems'].append(esid)
                                 self.update_driconxwsockets()
                             dric.bus.publish('MAVLINK', esid, mav_message)
-
                 except Exception as e:
-                    print(e)
-                    dric.bus.publish('MAVLINK_ERROR', e, 'ALL-255')
+                    if e.__class__.__name__ == 'MAVError': dric.bus.publish('MAVLINK_ERROR', e, 'ALL-255')
+                    else: _logger.exception('Unexpected exception')
         except Exception as e: # socket closed
-            print(e)
+            _logger.exception('Socket closed')
             return
 
 class DriconxPlugin(dric.Plugin):
@@ -291,6 +290,46 @@ class DriconxPlugin(dric.Plugin):
             return dric.JSONResponse(output)
         else:
             raise dric.exceptions.NotAcceptable()
+
+    @dric.route('driconx_enum_list', '/driconx/<connection>/enums/<enum>')
+    def connection_enums(self, connection, enum, request):
+        """ show all command in enum for the connection """
+        connection = connection.split("-")[0]   # also accept esid
+        if connection not in self.connections:
+            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection))
+        binding_name = self.connections[connection]['binding']
+        if binding_name not in self.bindings:
+            raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
+
+        binding = self.bindings[binding_name]()(None)
+        module = inspect.getmodule(binding)        
+        if enum not in module.enums: raise dric.exceptions.NotFound
+        output = []
+        for cmd in module.enums[enum]:
+            entry = module.enums[enum][cmd]
+            if entry.name == '{}_ENUM_END'.format(enum): continue
+            output.append({'name':entry.name, 'id':cmd, 'description':entry.description, 'param':entry.param})        
+        
+        if dric.support.accept.xml_over_json(request):
+            root = etree.Element('commands')
+            root.set('connection', connection)
+            root.set('binding', binding_name)
+            for entry in output:
+                c = etree.SubElement(root, 'command')
+                c.set('name', entry['name'])
+                c.set('id', str(entry['id']))
+                d = etree.SubElement(c, 'description')
+                d.text = entry['description']
+                for key in entry['param']:
+                    p = etree.SubElement(c, 'parameter')
+                    p.set('index', str(key))
+                    p.text = entry['param'][key]
+            return dric.XMLResponse(root)
+        elif dric.support.accept.json_over_xml(request):
+            return dric.JSONResponse(output)
+        else:
+            raise dric.exceptions.NotAcceptable()
+        
 
     @dric.on('SEND_MAVLINK')
     def send_mav_cmd(self, esid, command, parameters):

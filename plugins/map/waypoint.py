@@ -66,7 +66,7 @@ class SetCurrentState(State):
         message = {
             'target_system': target_system,
             'target_component': target_component,
-            'seq': seq
+            'seq': int(seq)
         }
         dric.bus.publish('SEND_MAVLINK', esid, 'MISSION_SET_CURRENT', message)
 
@@ -129,17 +129,17 @@ class WriteState(State):
                 'target_system': target_system,
                 'target_component': target_component,
                 'seq': seq,
-                'frame': waypoints[seq]['frame'],
-                'command': waypoints[seq]['command'],
+                'frame': float(waypoints[seq]['frame']),
+                'command': float(waypoints[seq]['command']),
                 'current': 0,
-                'autocontinue': waypoints[seq]['autocontinue'],
-                'param1': waypoints[seq]['param1'],
-                'param2': waypoints[seq]['param2'],
-                'param3': waypoints[seq]['param3'],
-                'param4': waypoints[seq]['param4'],
-                'x': waypoints[seq]['x'],
-                'y': waypoints[seq]['y'],
-                'z': waypoints[seq]['z']
+                'autocontinue': float(waypoints[seq]['autocontinue']),
+                'param1': float(waypoints[seq]['param1']),
+                'param2': float(waypoints[seq]['param2']),
+                'param3': float(waypoints[seq]['param3']),
+                'param4': float(waypoints[seq]['param4']),
+                'x': float(waypoints[seq]['x']),
+                'y': float(waypoints[seq]['y']),
+                'z': float(waypoints[seq]['z'])
             }
             dric.bus.publish('SEND_MAVLINK', esid, 'MISSION_ITEM', message)
         

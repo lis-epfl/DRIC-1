@@ -107,6 +107,10 @@ const API = function () {
   }
 
   this.getAvailableCommands = function (esids, callback) {
+    return this.getEnum('MAV_CMD', esids, callback)
+  }
+
+  this.getEnum = function (enumname, esids, callback) {
     const calls = []
     let commands = []
     console.log(esids)
@@ -116,7 +120,7 @@ const API = function () {
         protocol: Config.http,
         hostname: Config.hostname,
         port: Config.port,
-        pathname: `/driconx/${esid}/cmd`
+        pathname: `/driconx/${esid}/enums/${enumname}`
       })
       calls.push($.getJSON(url, callback))
     }

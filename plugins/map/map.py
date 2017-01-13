@@ -3,6 +3,7 @@ import dric.support
 from werkzeug.wsgi import wrap_file
 from os.path import join, abspath, isdir
 from os import listdir
+from mimetypes import guess_type
 
 @dric.support.Configurable('config.yml', 'config')
 @dric.support.Configurable('maps.ini', 'maps')
@@ -26,9 +27,20 @@ class MapPlugin(dric.Plugin):
             return dric.Response(wrap_file(request.environ, f), mimetype=mimetype[0], content_type=mimetype[0],  direct_passthrough=True)
         except(IOError, OSError):
             raise dric.NotFound()
+
+    @dric.route('map-tiles', '/map/full/<string:name>/<string:file>')
+    def serve(self, name, file, request):
+        path = abspath(join(self.source_dir, name, file))
+        try:
+            f = open(path, 'rb')
+            mimetype = guess_type(file)
+            
+            return dric.Response(wrap_file(request.environ, f), mimetype=mimetype[0], content_type=mimetype[0],  direct_passthrough=True)
+        except(IOError, OSError):
+            raise dric.NotFound()
     
     @dric.route('map-info', '/map/<string:name>')
-    def map_info(self, request, name):
+    def map_info(self, name, request):
         path = abspath(join(self.source_dir, name, 'info.json'))
         try:
             f = open(path, 'rb')
@@ -40,10 +52,10 @@ class MapPlugin(dric.Plugin):
     @dric.route('map-maps', '/map/maps')
     def list_maps(self, request):
         maps = list()
-        for map_dir in listdir(self.tiles_dir):
+        for map_dir in listdir(self.source_dir):
             if(isdir(map_dir)):
                 maps.append(map_dir)
-        return dric.JSONResponse(listdir(self.tiles_dir))
+        return dric.JSONResponse(listdir(self.source_dir))
     
 
 dric.register(__name__, MapPlugin())

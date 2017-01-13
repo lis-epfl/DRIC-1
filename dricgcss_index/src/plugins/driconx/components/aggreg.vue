@@ -43,6 +43,34 @@ Deaggregate All
 </template>
 
 <script>
+import hash from 'string-hash'
+
+let warned = false
+function setLocalStorageItem (name, value) {
+  try {
+    window.localStorage.setItem(name, value)
+  } catch (e) { warn('localStorage not available') }
+}
+
+function getLocalStorageItem (name) {
+  try {
+    return window.localStorage.getItem(name)
+  } catch (e) { warn('localStorage not available') }
+}
+function warn (message) {
+  if (!warned) {
+    warned = true
+    console.warn(message)
+  }
+}
+function hashkey (esidList) {
+  if (Array.isArray(esidList)) {
+    return 'aggreg/' + hash(esidList.concat().sort().map(e => e.esid).join(','))
+  }
+}
+setLocalStorageItem()
+getLocalStorageItem()
+
 export default {
   props: ['esidList', 'alias', 'reason', 'systemid'],
   watch: {
@@ -50,16 +78,29 @@ export default {
       if (this.esidList.length <= 0) {
         this.$emit('empty-aggreg')
       }
+
+      const lsalias = getLocalStorageItem(hashkey(this.esidList))
+      if (lsalias !== null && lsalias !== this.calias) {
+        this.$nextTick(() => (this.calias = lsalias))
+      }
     },
     'calias': function () {
       this.$emit('alias-changed', this.calias)
+      if (typeof this.calias !== 'undefined') {
+        setLocalStorageItem(hashkey(this.esidList), this.calias)
+      }
     }
   },
   data () {
     return { calias: '' }
   },
-  created () {
+  mounted () {
     this.calias = this.alias
+    const lsalias = getLocalStorageItem(hashkey(this.esidList))
+    if (lsalias !== null && lsalias !== this.calias) {
+      this.calias = lsalias
+      this.$emit('alias-changed', this.calias)
+    }
   }
 }
 </script>
