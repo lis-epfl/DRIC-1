@@ -5,7 +5,7 @@ Drone Remote Inspector and Controller
 Python 2
 
 ## Installation
-Download the last release from https://github.com/Arth-ur/DRIC/release. 
+Download the last release from https://github.com/Arth-ur/DRIC/releases.
 Or clone the repository and build front-end files from source.
 Then, in the terminal:
 ```
