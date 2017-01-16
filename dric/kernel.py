@@ -1,3 +1,7 @@
+import SocketServer
+import SimpleHTTPServer
+import threading
+import os
 from .pg import start_plugins
 from .ld import load_plugins
 from .server import Server
@@ -10,6 +14,13 @@ class Kernel(object):
         lfh.acquire_lock(ask_user)
 
     def boot(self):
-        """ Boot kernel by starting plugins and server """
+        """ Boot kernel by starting plugins and servers """
         start_plugins()
+        threading.Thread(target=self.start_frontend_server).start()
         Server('0.0.0.0', 9555).start()
+
+    def start_frontend_server(self):
+        os.chdir('./dricgcss_index/dist')
+        Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        httpd = SocketServer.TCPServer(('', 8080), Handler)
+        httpd.serve_forever()
