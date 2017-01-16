@@ -1,1 +1,0 @@
-cmd /k "env2\Scripts\activate & python main.py"
