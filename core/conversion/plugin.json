@@ -1,7 +1,0 @@
-{
-    "manifest-version": 1.0,
-    "name": "Conversion",
-    "id": "Conversion",
-    "description": "Unit conversion service",
-    "author": "Arthur Gay"
-}
