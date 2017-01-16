@@ -16,7 +16,9 @@ class Kernel(object):
     def boot(self):
         """ Boot kernel by starting plugins and servers """
         start_plugins()
+        oldcwd = os.getcwd()
         threading.Thread(target=self.start_frontend_server).start()
+        os.chdir(oldcwd)
         Server('0.0.0.0', 9555).start()
 
     def start_frontend_server(self):
