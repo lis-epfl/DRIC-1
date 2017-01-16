@@ -20,6 +20,6 @@ python main.py
 ## Front-end development server
 Requires node.js and npm.
 ```
-cd dric_gcss
+cd dricgcss_index
 npm run dev
 ```
