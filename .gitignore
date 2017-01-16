@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 # virtualenv
+env/
 env2/
 env3/
 
@@ -23,6 +24,7 @@ DRIC.pyproj
 # app files
 data/
 dric.lock
+drickernel.lock
 image.pdf
 
 # binary files
