@@ -1,3 +1,4 @@
+import os
 import dric
 import dric.support
 from werkzeug.wsgi import wrap_file
@@ -13,6 +14,8 @@ class MapPlugin(dric.Plugin):
         if(cfg.id == 'config'):
             self.tiles_dir = cfg.configuration['map']['tiles']
             self.source_dir = cfg.configuration['map']['source']
+            if not os.path.exists(self.tiles_dir): os.makedirs(self.tiles_dir)
+            if not os.path.exists(self.source_dir): os.makedirs(self.source_dir)
         elif (cfg.id == 'maps'):
             self.maps = cfg.configuration
 
@@ -59,12 +62,6 @@ class MapPlugin(dric.Plugin):
     
 
 dric.register(__name__, MapPlugin())
-
-dric.support.inject_content_script('/content/plugins/map/js/map.js')
-dric.support.inject_content_script('/content/plugins/map/css/map.css')
-
-dric.support.inject_content_script('/content/plugins/map/ol/ol.js');
-dric.support.inject_content_script('/content/plugins/map/ol/ol.css');
 
 
 #dric.support.inject_content_script('/content/plugins/map/leaflet/leaflet.css')

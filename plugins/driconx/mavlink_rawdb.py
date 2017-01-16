@@ -15,6 +15,8 @@ class MavlinkRawDBPlugin(dric.Plugin):
     def __init__(self, *args, **kwargs):
         # remove all .index and .raw files
         self.channels_rootdir = join('data', 'mavlink', 'channels')
+        if not os.path.exists(self.channels_rootdir):
+            os.makedirs(self.channels_rootdir)
         [ os.remove(join(self.channels_rootdir, f)) for f in os.listdir(self.channels_rootdir) if f.endswith('.index') or f.endswith('.raw') ]
         self.__channels = {}
         self.__mavlinks = {}
