@@ -7,7 +7,6 @@ import sys
 kernel = dric.kernel.Kernel()
 
 # Main components directories
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'core')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'plugins')))
 
 # Import components
