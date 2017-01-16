@@ -1,7 +1,0 @@
-{
-  "manifest-version": 1.0,
-  "name": "Mavlink",
-  "id": "mavlink",
-  "plugin-uri": "",
-  "author": "Arthur Gay"
-}

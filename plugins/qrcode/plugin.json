@@ -1,7 +1,0 @@
-{
-    "manifest-version": 1.0,
-    "name": "QRCode",
-    "id": "QRCode",
-    "description": "Show a QRCode to allow fast connection",
-    "author": "Arthur Gay"
-}

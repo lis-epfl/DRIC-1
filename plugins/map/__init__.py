@@ -1,1 +1,1 @@
-from . import map, mapslicer, position, waypoint
+from . import map, position, waypoint
