@@ -19,3 +19,4 @@ pymavlink
 pystache
 PyYAML
 Werkzeug
+appdirs
