@@ -4,8 +4,10 @@ import logging.handlers
 import logging.config
 import time
 import yaml
+import appdirs
 
 env = 'dev'
+datadir = appdirs.user_data_dir('dric', 'Arth-ur')
 
 class MySocketHandler(logging.handlers.SocketHandler):
     def makePickle(self, record):
