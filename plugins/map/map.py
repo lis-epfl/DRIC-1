@@ -5,6 +5,9 @@ from werkzeug.wsgi import wrap_file
 from os.path import join, abspath, isdir
 from os import listdir
 from mimetypes import guess_type
+from logging import getLogger
+
+_logger = getLogger('dric.map')
 
 @dric.support.Configurable('config.yml', 'config')
 @dric.support.Configurable('maps.ini', 'maps')
@@ -14,8 +17,12 @@ class MapPlugin(dric.Plugin):
         if(cfg.id == 'config'):
             self.tiles_dir = cfg.configuration['map']['tiles']
             self.source_dir = cfg.configuration['map']['source']
-            if not os.path.exists(self.tiles_dir): os.makedirs(self.tiles_dir)
-            if not os.path.exists(self.source_dir): os.makedirs(self.source_dir)
+            if not os.path.exists(self.tiles_dir):
+                _logger.info('mkdir "%s".', abspath(self.tiles_dir))
+                os.makedirs(self.tiles_dir)
+            if not os.path.exists(self.source_dir): 
+                _logger.info('mkdir "%s".', abspath(self.source_dir))
+                os.makedirs(self.source_dir)
         elif (cfg.id == 'maps'):
             self.maps = cfg.configuration
 

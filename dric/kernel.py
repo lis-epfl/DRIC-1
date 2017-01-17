@@ -31,7 +31,13 @@ class Kernel(object):
         if not os.path.exists(frontend_dir):
             _logger.warn('Directory "{}" not found. Frontend server will not be started.'.format(frontend_dir))
             return
-        os.chdir(frontend_dir)
-        Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+        Handler = MySimpleHTTPRequestHandler
         httpd = SocketServer.TCPServer(('', 8000), Handler)
         httpd.serve_forever()
+
+class MySimpleHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler, object):
+    def __init__(self, request, client_address, server):
+        return super(MySimpleHTTPRequestHandler, self).__init__(request, client_address, server)
+
+    def translate_path(self, path):
+        return reduce(os.path.join, path.split('/'), os.path.join('dricgcss_index', 'dist'))
