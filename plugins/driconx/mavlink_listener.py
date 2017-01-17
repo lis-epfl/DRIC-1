@@ -69,7 +69,7 @@ class MavlinkListener(dric.Plugin):
         self.esid_aq = dric.aq.AQ(self.aq_esid_list)
 
     def setup(self, eventbus):
-        dbpath = join('data', 'mavlink', 'database')
+        dbpath = join(dric.datadir, 'data', 'mavlink', 'database')
         if exists(dbpath):
             rmtree(dbpath)
         self.db = Database(dbpath)
