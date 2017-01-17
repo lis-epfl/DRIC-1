@@ -1,13 +1,18 @@
-
 import logging
 import logging.handlers
 import logging.config
 import time
 import yaml
 import appdirs
+import argparse
 
 env = 'dev'
 datadir = appdirs.user_data_dir('dric', 'Arth-ur')
+
+parser = argparse.ArgumentParser(description='The DRIC Ground Control Station Software.')
+parser.add_argument('--backend-only', dest='backend_only', action='store_true',
+                    help='Start only the backend server. The frontend server will not be started.')
+dconfig = vars(parser.parse_args())
 
 class MySocketHandler(logging.handlers.SocketHandler):
     def makePickle(self, record):

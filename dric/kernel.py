@@ -1,9 +1,11 @@
+import dric
 import SocketServer
 import SimpleHTTPServer
 import threading
 import os
 import os.path
 import logging
+import sys
 from .pg import start_plugins
 from .ld import load_plugins
 from .server import Server
@@ -24,11 +26,12 @@ class Kernel(object):
         Server('0.0.0.0', 9555).start()
 
     def start_frontend_server(self):
+        if dric.dconfig['backend_only']: return
         frontend_dir = os.path.join('dricgcss_index', 'dist')
         if not os.path.exists(frontend_dir):
             _logger.warn('Directory "{}" not found. Frontend server will not be started.'.format(frontend_dir))
             return
         os.chdir(frontend_dir)
         Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-        httpd = SocketServer.TCPServer(('', 8080), Handler)
+        httpd = SocketServer.TCPServer(('', 8000), Handler)
         httpd.serve_forever()
