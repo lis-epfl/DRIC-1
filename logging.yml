@@ -2,21 +2,26 @@ version: 1
 formatters:
   simple:
     format: '[%(levelno)s] %(message)s (%(name)s)'
+  colored:
+    '()': 'colorlog.ColoredFormatter'
+    format: '%(log_color)s%(levelname)-8s%(reset)s %(bg_blue)s[%(name)s]%(reset)s %(message)s'
+    log_colors:
+      DEBUG: 'cyan'
+      INFO: 'green'
+      WARNING: 'yellow'
+      ERROR: 'red'
+      CRITICAL: 'red'
+
 handlers:
   console:
     class: logging.StreamHandler
     level: DEBUG
-    formatter: simple
-    stream: ext://sys.stdout
-  noisyConsole:
-    class: logging.StreamHandler
-    level: DEBUG
-    formatter: simple
+    formatter: colored
     stream: ext://sys.stdout
 loggers:
   dric:
     level: DEBUG
-    handlers: [noisyConsole]
+    handlers: [console]
     propagate: no
   dric.mavlink:
     level: DEBUG
@@ -28,7 +33,7 @@ loggers:
     propagate: no
   dric.server.eventlet:
     level: DEBUG
-    handlers: [noisyConsole]
+    handlers: [console]
     propagate: no
 root:
   level: DEBUG
