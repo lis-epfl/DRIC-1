@@ -21,56 +21,118 @@ class driconxws(dric.funpass):
     def __init__(self, *args, **kwargs):
         return super(driconxws, self).__init__("driconxws-funpass", *args, **kwargs)
 
-class FileLikeUDPSender(object):
-    def __init__(self, socket, address):
-        self.socket = socket
-        self.address = address
-    def write(self, buf):
-        print(self.address)
-        self.socket.sendto(buf, self.address)
+class UDPConnection(object):
 
-class UDPSender(object):
-    def __init__(self): 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
-    def writer(self, address):
-        return FileLikeUDPSender(self.socket, address)
+    # def __init__(self, properties, binding, update_driconxwsockets)
+    #     self.properties = properties
+    #     self.properties['connection_string'] = "{}://{}:{}/{}".format(properties['type'], properties['host'], properties['port'], properties['binding'])
+    #     self.properties['name'] = sha1(properties['connection_string']).hexdigest()[:10]
+    #     self.properties['connected'] = False
+    #     self.properties['connecting'] = False
+    #     self.properties['systems_last_time'] = {}
+    #     self.properties['reply_address'] = ((properties['host'], properties['port']))     # ???
+    #     self.properties['systems'] = {}
 
-class ConnectionSubroutine(object):
-    def __init__(self, mavlink, connection, update_driconxwsockets):
-        self.mavlink = mavlink
-        self.connection = connection
-        self.connection['systems_last_time'] = {}
-        self.connection['systems'] = []
-        self.prefix = self.connection['name'] + '-'
-        self.update_driconxwsockets = update_driconxwsockets
-        self.reply_socket = None
-        self.connection['reply_address'] = None
+    #     self.mavlink = binding()(self)
+    #     self.socket = None
+    #     self.update_driconxwsockets = update_driconxwsockets    # function to update connections
 
-    def __call__(self, sock):
+    def __init__(self, type, host, port, binding, binding_name, update_driconxwsockets):
+        self.mavlink = binding()(self, srcSystem=255)
+        self.socket = None
+        self.update_driconxwsockets = update_driconxwsockets    # function to update connections
+
+        connection_string = "{}://{}:{}/{}".format(type, host, port, binding_name)
+        self.properties = {}
+        self.properties['connection_string'] = connection_string
+        self.properties['name'] = sha1(connection_string).hexdigest()[:10]
+        self.properties['binding'] = binding_name
+        self.properties['host'] = host
+        self.properties['connecting'] = False
+        self.properties['connected'] = True
+        self.properties['systems'] = []
+        self.properties['reply_address'] = ((str(host), int(port)))     # ???
+        self.properties['type'] = type
+        self.properties['port'] = port
+        self.properties['systems_last_time'] = {}
+        print('!!!!!!!!!!! FINISHED CONSTRUCTOR ')
+
+    def connect(self):
+        typesocks = {'tcp': socket.SOCK_STREAM, 'udp': socket.SOCK_DGRAM}
+        connection_type = self.properties['type'].lower()
+        host = self.properties['host']
+        port = int(self.properties['port'])
+        self.socket = socket.socket(socket.AF_INET, typesocks[connection_type])
+        self.socket.bind((host, port))
+        self.properties['connected'] = True
+        self.properties['connecting'] = False
+        print("Socket  Bound")
+        # self.update_driconxwsockets()
+        spawn(self._listen)
+
+        
+        
+
+    def write(self,buf):
+        try:
+            self.socket.sendto(buf, self.properties['reply_address'])
+        except Exception as e:
+            raise e
+
+    def send(self, message):
+        if self.properties['connected'] == True:
+            return self.mavlink.send(message)
+        else:
+            return None
+
+    def read(self):
+        # we ignore the return address and always send to address
+        data, return_address = self.socket.recvfrom(1024)
+        self.properties['reply_address'] = return_address
+        return data
+
+    def _listen(self):
         try:
             while True:
-                data, address = sock.recvfrom(1024)
+                if not self.properties['connected']:
+                    return
+                data = self.read()
 
-                self.connection['reply_address'] = address
-
-                dric.bus.publish('MAVLINK_RAW', self.connection['name'], data, self.mavlink)
+                dric.bus.publish('MAVLINK_RAW', self.properties['name'], data, self.mavlink)
                 sleep(0.0001) # security
                 try:
+                    print("RECEIVED MESSAGE")
                     messages = self.mavlink.parse_buffer(data)
-                    if messages is not None:
-                        #print("{}:{}".format(time(), len(messages)))
-                        for mav_message in messages:
-                            esid = self.prefix + str(mav_message.get_srcSystem())
-                            if esid not in self.connection['systems']:
-                                self.connection['systems'].append(esid)
-                                self.update_driconxwsockets()
-                            dric.bus.publish('MAVLINK', esid, mav_message)
+                    if messages is None:
+                        continue
+                    for mav_message in messages:
+                        esid = self.properties['name'] + "-" + str(mav_message.get_srcSystem())
+                        if esid not in self.properties['systems']:
+                            self.properties['systems'].append(esid)
+                            self.update_driconxwsockets()
+                        dric.bus.publish('MAVLINK', esid, mav_message)
+
                 except Exception as e:
                     if e.__class__.__name__ == 'MAVError': dric.bus.publish('MAVLINK_ERROR', e, 'ALL-255')
                     else: _logger.exception('Unexpected exception')
-        except Exception as e: # socket closed
-            _logger.exception('Socket closed')
+        except Exception as e:
+            print(e)
+            self.disconnect()
+            print("Problem while reading; disconnecting")
             return
+
+
+    def disconnect(self):
+        self.properties['connected'] = False
+        self.properties['connecting'] = False
+        try:
+            self.socket.close()
+        except Exception as e:
+            pass
+        self.update_driconxwsockets()
+
+    def get_name(self):
+        return self.properties['name']
 
 class DriconxPlugin(dric.Plugin):
 
@@ -79,39 +141,28 @@ class DriconxPlugin(dric.Plugin):
         self.bindings = {}
         self.DRICONXWS_MESSAGE_HEADER = compile(r"^(/\S+)\s(.*)")
         self.connections = {}
-        self.sockets = {}
-        self.udpsender = UDPSender()
-        self.senders = {}
 
-    def connect(self, type, address, port, binding, connection):
-        typesocks = {'tcp': socket.SOCK_STREAM, 'udp': socket.SOCK_DGRAM}
-        sock = socket.socket(socket.AF_INET, typesocks[type.lower()])
-        sock.bind((address, int(port)))
+    def add_connection(self, connnection_type, host, port, binding_name):
+        binding = self.bindings[binding_name]
+        connection = UDPConnection(connnection_type, host, port, binding, binding_name, self.update_driconxwsockets)
+        connection.connect()
+        self.connections[connection.get_name()] = connection
+        self.update_driconxwsockets()
 
-        self.sockets[connection['name']] = sock
-
-        mavlink_class_provider = self.bindings[binding]
-        mavlink_class = mavlink_class_provider()
-        mavlink = mavlink_class(None)
-
-        spawn(ConnectionSubroutine(mavlink, connection, self.update_driconxwsockets), sock)
 
     @dric.websocket('driconx_connect', '/driconx/ws')
     def connectws(self, ws, request):
         self.driconxwsockets.append(ws)
         m = 'A' # send A for update
         while m == 'A':
-            ws.send(unicode(dumps([self.connections[cname] for cname in self.connections])))
+            ws.send(unicode(dumps([self.connections[cname].properties for cname in self.connections])))
             m = ws.wait()
         self.driconxwsockets.remove(ws)
 
-    def add_connection(self, connection):
-        self.connections[connection['name']] = connection
-        
-        self.update_driconxwsockets()
 
     def update_driconxwsockets(self):
-        update = unicode(dumps([self.connections[cname] for cname in self.connections]))
+        update = unicode(dumps([self.connections[cname].properties for cname in self.connections]))
+        print(update)
         for driconxwsocket in self.driconxwsockets:
             try:
                 driconxwsocket.send(update)
@@ -158,24 +209,29 @@ class DriconxPlugin(dric.Plugin):
         if request.method != 'PUT':
             raise dric.exceptions.MethodNotAllowed()
         try:
-            connection = loads(request.get_data(as_text=True))
-
-            connection['connection_string'] = "{}://{}:{}/{}".format(connection['type'], connection['host'], connection['port'], connection['binding'])
-            connection['name'] = sha1(connection['connection_string']).hexdigest()[:10]
+            properties = loads(request.get_data(as_text=True))
 
             try:
-                self.connect(connection['type'], connection['host'], connection['port'], connection['binding'], connection)
+                self.add_connection(properties['type'], properties['host'], properties['port'], properties['binding'])
             except Exception as e:
                 _logger.warn(e)
-                connection['connected'] = False
-                connection['connecting'] = False
                 raise dric.exceptions.Conflict('Connection already opened')
+            
+            print("SUCCESSFULLY launched connection")
 
-            connection['connected'] = True
-            connection['connecting'] = False
-            self.add_connection(connection)
+            print("---------- list of connections ---------------------")
+            for cname in self.connections:
+                c = self.connections[cname]
+                print(cname)
+                print(c.properties['host'])
+                print(c.properties['port'])
+                print(c.properties['reply_address'])
+                print(c.properties['type'])
+                print(c.properties['binding'])
 
-            return dric.Response(str(connection))
+            print("---------END  list of connections ---------------------")
+
+            return dric.Response(str(connection.properties))
         except dric.exceptions.Conflict as e:
             raise e
         except Exception as e:
@@ -192,20 +248,11 @@ class DriconxPlugin(dric.Plugin):
         if request.method != 'POST':
             raise dric.exceptions.MethodNotAllowed()
         try:
-            connection = loads(request.get_data(as_text=True))
+            connection, connection_name = self.get_connection_from_request(request)
             
-            if connection['name'] not in self.connections or connection['name'] not in self.sockets:
-                raise dric.exceptions.NotFound()
-            
-            socket = self.sockets[connection['name']]
-            socket.close()
-            my_connection = self.connections[connection['name']]
-            my_connection['connected'] = False
-            my_connection['connecting'] = False
-            
-            self.update_driconxwsockets()
+            connection.disconnect()
 
-            return dric.Response(str(my_connection))
+            return dric.Response(str(connection.properties))
         except dric.exceptions.NotFound as e:
             raise e
         except Exception as e:
@@ -222,22 +269,20 @@ class DriconxPlugin(dric.Plugin):
         if request.method != 'POST':
             raise dric.exceptions.MethodNotAllowed()
         try:
-            connection = loads(request.get_data(as_text=True))
-            
-            if connection['name'] not in self.connections or connection['name'] not in self.sockets:
-                raise dric.exceptions.NotFound()
-            
-            my_connection = self.connections[connection['name']]
-            self.sockets[connection['name']].close()
-            self.sockets.pop(connection['name'])
-            self.connections.pop(connection['name'])
+            connection, connection_name = self.get_connection_from_request(request)
+            connection.disconnect()
+            print("DISCONNECTED TO DELETE")
 
+            self.connections.pop(connection_name)
+            print("REMOVED TO DELETE")            
             self.update_driconxwsockets()
+            print("DELETED CONNECTION ")
 
-            return dric.Response(str(my_connection))
+            return dric.Response(str(connection.properties))
         except dric.exceptions.NotFound as e:
             raise e
         except Exception as e:
+            print(e)
             raise dric.exceptions.BadRequest(e)
 
     @dric.route("driconx_bindings_list", '/driconx/bindings')
@@ -254,18 +299,16 @@ class DriconxPlugin(dric.Plugin):
         else:
             return dric.Response('Not acceptable', status=406)
 
-    @dric.route('driconx_cmd_list', '/driconx/<connection>/cmd')
-    def connection_cmd(self, connection, request):
+    @dric.route('driconx_cmd_list', '/driconx/<connection_name>/cmd')
+    def connection_cmd(self, connection_name, request):
         """ show all available commands for the connection """
-        connection = connection.split("-")[0]   # also accept esid
-        if connection not in self.connections:
-            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection))
-        binding_name = self.connections[connection]['binding']
-        if binding_name not in self.bindings:
-            raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
-        
-        binding = self.bindings[binding_name]()(None)
-        module = inspect.getmodule(binding)
+        connection_name = connection_name.split("-")[0]   # also accept esid
+        if connection_name not in self.connections:
+            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection_name))
+        connection = self.connections[connection_name]
+        binding_name = connection.properties['binding']
+
+        module = inspect.getmodule(connection.mavlink)
         output = []
         for cmd in module.enums['MAV_CMD']:
             entry = module.enums['MAV_CMD'][cmd]
@@ -273,7 +316,7 @@ class DriconxPlugin(dric.Plugin):
 
         if dric.support.accept.xml_over_json(request):
             root = etree.Element('commands')
-            root.set('connection', connection)
+            root.set('connection', connection_name)
             root.set('binding', binding_name)
             for entry in output:
                 c = etree.SubElement(root, 'command')
@@ -291,18 +334,22 @@ class DriconxPlugin(dric.Plugin):
         else:
             raise dric.exceptions.NotAcceptable()
 
-    @dric.route('driconx_enum_list', '/driconx/<connection>/enums/<enum>')
-    def connection_enums(self, connection, enum, request):
+    @dric.route('driconx_enum_list', '/driconx/<connection_name>/enums/<enum>')
+    def connection_enums(self, connection_name, enum, request):
         """ show all command in enum for the connection """
-        connection = connection.split("-")[0]   # also accept esid
-        if connection not in self.connections:
-            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection))
-        binding_name = self.connections[connection]['binding']
-        if binding_name not in self.bindings:
-            raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
+        connection_name = connection_name.split("-")[0]   # also accept esid
+        if connection_name not in self.connections:
+            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection_name))
+        connection = self.connections[connection_name]
 
-        binding = self.bindings[binding_name]()(None)
-        module = inspect.getmodule(binding)        
+        binding_name = connection.properties['binding']
+        # if binding_name not in self.bindings:
+        #     raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
+        # binding = self.bindings[binding_name]()(None)
+        # binding = connection.mavlink
+
+
+        module = inspect.getmodule(connection.mavlink)        
         if enum not in module.enums: raise dric.exceptions.NotFound
         output = []
         for cmd in module.enums[enum]:
@@ -312,7 +359,7 @@ class DriconxPlugin(dric.Plugin):
         
         if dric.support.accept.xml_over_json(request):
             root = etree.Element('commands')
-            root.set('connection', connection)
+            root.set('connection', connection_name)
             root.set('binding', binding_name)
             for entry in output:
                 c = etree.SubElement(root, 'command')
@@ -333,10 +380,14 @@ class DriconxPlugin(dric.Plugin):
 
     @dric.on('SEND_MAVLINK')
     def send_mav_cmd(self, esid, command, parameters):
-        if esid not in self.senders:
-            self.senders[esid] = self.get_binding_for_esid(esid)
-        binding = self.senders[esid]
-        module = inspect.getmodule(binding)
+
+        # get connection from esid
+        connection_name = esid.split("-")[0]
+        if connection not in self.connections:
+            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection))
+        connection = self.connections[connection_name]
+
+        module = inspect.getmodule(connection.mavlink)
 
         # if command is a string, try to find the corresponding id#
         if isinstance(command, basestring):
@@ -356,19 +407,20 @@ class DriconxPlugin(dric.Plugin):
         parameters = [parameters[param_name] for param_name in message_class.fieldnames]
 
         # send message
-        binding.send(message_class(*parameters))
+        connection.send(message_class(*parameters))
+        
+    def get_connection_from_request(self, request):
+        connection_properties = loads(request.get_data(as_text=True))
+        connection_name = connection_properties['name']
 
-    def get_binding_for_esid(self, esid):
-        connection_name, system_id = esid.split('-')
+        return self.get_connection_from_name(connection_name)
+
+    def get_connection_from_name(self, connection_name):
         if connection_name not in self.connections:
             raise dric.exceptions.NotFound("Connection '{}' not found".format(connection_name))
-        binding_name = self.connections[connection_name]['binding']
-        socket = self.sockets[connection_name]
-        if binding_name not in self.bindings:
-            raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
-        reply_address = self.connections[connection_name]['reply_address']
-        return self.bindings[binding_name]()(self.udpsender.writer(reply_address), srcSystem=255)
-        
+        return (self.connections[connection_name], connection_name)
+
+
 driconxplugin = DriconxPlugin()
 dric.register(__name__, driconxplugin)
 
