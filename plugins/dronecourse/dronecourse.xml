@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<mavlink>
+    <include>common.xml</include>
+        <!-- NOTE: If the included file already contains a version tag, remove the version tag here, else uncomment to enable. -->
+	<!--<version>3</version>-->
+	<enums>
+	</enums>
+	<messages>
+		<message id="150" name="TARGET_POSITION_NED">
+			<description>This message encodes the position of a target object</description>
+			<field type="float" name="x">X Position in NED frame in meters</field>
+			<field type="float" name="y">Y Position in NED frame in meters</field>
+			<field type="float" name="z">Z Position in NED frame in meters</field>
+			<field type="float" name="vx">X velocity in NED frame in meter / s</field>
+			<field type="float" name="vy">Y velocity in NED frame in meter / s</field>
+			<field type="float" name="vz">Z velocity in NED frame in meter / s</field>
+			<field type="uint8_t" name="target_num">ID of the target object.</field>
+		</message>
+		<message id="151" name="TARGET_POSITION_NED_FILTERED">
+			<description>This message encodes the position of a target object</description>
+			<field type="float" name="x">X Position in NED frame in meters</field>
+			<field type="float" name="y">Y Position in NED frame in meters</field>
+			<field type="float" name="z">Z Position in NED frame in meters</field>
+			<field type="float" name="vx">X velocity in NED frame in meter / s</field>
+			<field type="float" name="vy">Y velocity in NED frame in meter / s</field>
+			<field type="float" name="vz">Z velocity in NED frame in meter / s</field>
+			<field type="uint8_t" name="target_num">ID of the target object.</field>
+		</message>
+	</messages>
+</mavlink>

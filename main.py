@@ -20,8 +20,10 @@ import parameters
 import map
 import quickarm
 
+
 # IMPORT YOUR COMPONENTS HERE
 # import ...
+import dronecourse
 
 # Boot kernel
 kernel.boot()
