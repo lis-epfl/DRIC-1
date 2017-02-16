@@ -26,14 +26,7 @@ class FileLikeUDPSender(object):
         self.socket = socket
         self.address = address
     def write(self, buf):
-        print(self.address)
         self.socket.sendto(buf, self.address)
-
-class UDPSender(object):
-    def __init__(self): 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
-    def writer(self, address):
-        return FileLikeUDPSender(self.socket, address)
 
 class ConnectionSubroutine(object):
     def __init__(self, mavlink, connection, update_driconxwsockets):
@@ -80,7 +73,6 @@ class DriconxPlugin(dric.Plugin):
         self.DRICONXWS_MESSAGE_HEADER = compile(r"^(/\S+)\s(.*)")
         self.connections = {}
         self.sockets = {}
-        self.udpsender = UDPSender()
         self.senders = {}
 
     def connect(self, type, address, port, binding, connection):
@@ -367,7 +359,7 @@ class DriconxPlugin(dric.Plugin):
         if binding_name not in self.bindings:
             raise dric.exceptions.NotFound("Binding '{}' not found".format(binding_name))
         reply_address = self.connections[connection_name]['reply_address']
-        return self.bindings[binding_name]()(self.udpsender.writer(reply_address), srcSystem=255)
+        return self.bindings[binding_name]()(FileLikeUDPSender(socket, reply_address), srcSystem=255)
         
 driconxplugin = DriconxPlugin()
 dric.register(__name__, driconxplugin)
