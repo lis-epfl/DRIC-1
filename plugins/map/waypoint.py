@@ -115,7 +115,9 @@ class WriteListState(State):
         dric.bus.publish('SEND_MAVLINK', esid, 'MISSION_COUNT', message)
 
     def next_state(self, event, environ):
-        return WriteState(self.target_system, self.target_component, event.esid, self.waypoints).next_state(event, environ)
+        if event.payload.get_type() == 'MISSION_REQUEST':
+            return WriteState(self.target_system, self.target_component, event.esid, self.waypoints).next_state(event, environ)
+        raise NoStateTransitionError(self, event)
 
 class WriteState(State):
     STATE_WRITE = 'STATE_WRITE'
@@ -282,8 +284,6 @@ class WaypointPlugin(dric.Plugin):
 
     @dric.on('MAVLINK')
     def waypointmav(self, esid, message):
-        if message.get_type().startswith('MISSION'):
-            print(message.get_type())
         environ = Environ(wsl=self.wsl.values())
         event = Event(SYSTEM, message, esid)
         try: self.state = self.state.next_state(event, environ)
