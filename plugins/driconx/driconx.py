@@ -359,10 +359,7 @@ class DriconxPlugin(dric.Plugin):
     def send_mav_cmd(self, esid, command, parameters):
 
         # get connection from esid
-        connection_name = esid.split("-")[0]
-        if connection not in self.connections:
-            raise dric.exceptions.NotFound("Connection '{}' not found".format(connection))
-        connection = self.connections[connection_name]
+        connection = self.get_connection_from_name(esid)
 
         module = inspect.getmodule(connection.mavlink)
 
@@ -390,12 +387,13 @@ class DriconxPlugin(dric.Plugin):
         connection_properties = loads(request.get_data(as_text=True))
         connection_name = connection_properties['name']
 
-        return self.get_connection_from_name(connection_name)
+        return (self.get_connection_from_name(connection_name), connection_name)
 
     def get_connection_from_name(self, connection_name):
+        connection_name = connection_name.split("-")[0]
         if connection_name not in self.connections:
             raise dric.exceptions.NotFound("Connection '{}' not found".format(connection_name))
-        return (self.connections[connection_name], connection_name)
+        return self.connections[connection_name]
 
 
 driconxplugin = DriconxPlugin()
