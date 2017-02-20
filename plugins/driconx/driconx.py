@@ -137,11 +137,6 @@ class DriconxPlugin(dric.Plugin):
         self.bindings = {}
         self.DRICONXWS_MESSAGE_HEADER = compile(r"^(/\S+)\s(.*)")
         self.connections = {}
-<<<<<<< HEAD
-        self.sockets = {}
-        self.senders = {}
-=======
->>>>>>> fix/communication
 
     def add_connection(self, connnection_type, host, port, binding_name):
         binding = self.bindings[binding_name]
