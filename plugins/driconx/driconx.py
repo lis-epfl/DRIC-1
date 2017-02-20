@@ -23,20 +23,6 @@ class driconxws(dric.funpass):
 
 class UDPConnection(object):
 
-    # def __init__(self, properties, binding, update_driconxwsockets)
-    #     self.properties = properties
-    #     self.properties['connection_string'] = "{}://{}:{}/{}".format(properties['type'], properties['host'], properties['port'], properties['binding'])
-    #     self.properties['name'] = sha1(properties['connection_string']).hexdigest()[:10]
-    #     self.properties['connected'] = False
-    #     self.properties['connecting'] = False
-    #     self.properties['systems_last_time'] = {}
-    #     self.properties['reply_address'] = ((properties['host'], properties['port']))     # ???
-    #     self.properties['systems'] = {}
-
-    #     self.mavlink = binding()(self)
-    #     self.socket = None
-    #     self.update_driconxwsockets = update_driconxwsockets    # function to update connections
-
     def __init__(self, type, host, port, binding, binding_name, update_driconxwsockets):
         self.mavlink = binding()(self, srcSystem=255)
         self.socket = None
@@ -206,24 +192,16 @@ class DriconxPlugin(dric.Plugin):
             raise dric.exceptions.MethodNotAllowed()
         try:
             properties = loads(request.get_data(as_text=True))
-            print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTRiyin")
             try:
                 connection = self.add_connection(properties['type'], properties['host'], properties['port'], properties['binding'])
             except Exception as e:
                 _logger.warn(e)
-                print("*33333#################################################################")
-                print(e)
                 raise dric.exceptions.Conflict('Connection already opened')
-            print("*33333#################################################################: success")
 
             return dric.Response(str(connection.properties))
         except dric.exceptions.Conflict as e:
-            print("*33333#################################################################")
-            print(e)
             raise e
         except Exception as e:
-            print("*33333#################################################################")
-            print(e)
             raise dric.exceptions.BadRequest()
 
 
