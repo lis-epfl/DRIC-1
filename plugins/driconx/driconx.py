@@ -55,7 +55,6 @@ class UDPConnection(object):
         self.properties['type'] = type
         self.properties['port'] = port
         self.properties['systems_last_time'] = {}
-        print('!!!!!!!!!!! FINISHED CONSTRUCTOR ')
 
     def connect(self):
         typesocks = {'tcp': socket.SOCK_STREAM, 'udp': socket.SOCK_DGRAM}
@@ -66,7 +65,6 @@ class UDPConnection(object):
         self.socket.bind((host, port))
         self.properties['connected'] = True
         self.properties['connecting'] = False
-        print("Socket  Bound")
         # self.update_driconxwsockets()
         spawn(self._listen)
 
@@ -101,7 +99,6 @@ class UDPConnection(object):
                 dric.bus.publish('MAVLINK_RAW', self.properties['name'], data, self.mavlink)
                 sleep(0.0001) # security
                 try:
-                    print("RECEIVED MESSAGE")
                     messages = self.mavlink.parse_buffer(data)
                     if messages is None:
                         continue
@@ -116,7 +113,6 @@ class UDPConnection(object):
                     if e.__class__.__name__ == 'MAVError': dric.bus.publish('MAVLINK_ERROR', e, 'ALL-255')
                     else: _logger.exception('Unexpected exception')
         except Exception as e:
-            print(e)
             self.disconnect()
             print("Problem while reading; disconnecting")
             return
@@ -162,7 +158,6 @@ class DriconxPlugin(dric.Plugin):
 
     def update_driconxwsockets(self):
         update = unicode(dumps([self.connections[cname].properties for cname in self.connections]))
-        print(update)
         for driconxwsocket in self.driconxwsockets:
             try:
                 driconxwsocket.send(update)
@@ -216,20 +211,6 @@ class DriconxPlugin(dric.Plugin):
             except Exception as e:
                 _logger.warn(e)
                 raise dric.exceptions.Conflict('Connection already opened')
-            
-            print("SUCCESSFULLY launched connection")
-
-            print("---------- list of connections ---------------------")
-            for cname in self.connections:
-                c = self.connections[cname]
-                print(cname)
-                print(c.properties['host'])
-                print(c.properties['port'])
-                print(c.properties['reply_address'])
-                print(c.properties['type'])
-                print(c.properties['binding'])
-
-            print("---------END  list of connections ---------------------")
 
             return dric.Response(str(connection.properties))
         except dric.exceptions.Conflict as e:
@@ -271,12 +252,8 @@ class DriconxPlugin(dric.Plugin):
         try:
             connection, connection_name = self.get_connection_from_request(request)
             connection.disconnect()
-            print("DISCONNECTED TO DELETE")
-
             self.connections.pop(connection_name)
-            print("REMOVED TO DELETE")            
             self.update_driconxwsockets()
-            print("DELETED CONNECTION ")
 
             return dric.Response(str(connection.properties))
         except dric.exceptions.NotFound as e:
