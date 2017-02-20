@@ -144,6 +144,7 @@ class DriconxPlugin(dric.Plugin):
         connection.connect()
         self.connections[connection.get_name()] = connection
         self.update_driconxwsockets()
+        return connection
 
 
     @dric.websocket('driconx_connect', '/driconx/ws')
@@ -205,18 +206,27 @@ class DriconxPlugin(dric.Plugin):
             raise dric.exceptions.MethodNotAllowed()
         try:
             properties = loads(request.get_data(as_text=True))
-
+            print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTRiyin")
             try:
-                self.add_connection(properties['type'], properties['host'], properties['port'], properties['binding'])
+                connection = self.add_connection(properties['type'], properties['host'], properties['port'], properties['binding'])
             except Exception as e:
                 _logger.warn(e)
+                print("*33333#################################################################")
+                print(e)
                 raise dric.exceptions.Conflict('Connection already opened')
+            print("*33333#################################################################: success")
 
             return dric.Response(str(connection.properties))
         except dric.exceptions.Conflict as e:
+            print("*33333#################################################################")
+            print(e)
             raise e
         except Exception as e:
+            print("*33333#################################################################")
+            print(e)
             raise dric.exceptions.BadRequest()
+
+
 
     @dric.route('driconx_disconnect', '/driconx/disconnect')
     def connection_disconnect(self, request):
