@@ -37,7 +37,12 @@ export default {
   },
   watch: {
     aggregations (aggregations) {
-      if (this.active === null) { return }
+      if (this.active === null) {
+        if (aggregations.length > 1) {
+          this.active = aggregations[0]
+        }
+        return
+      }
       if (aggregations.map(a => a.alias).indexOf(this.active.alias) === -1) {
         this.active = null
       }
