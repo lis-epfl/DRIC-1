@@ -21,10 +21,25 @@ class driconxws(dric.funpass):
     def __init__(self, *args, **kwargs):
         return super(driconxws, self).__init__("driconxws-funpass", *args, **kwargs)
 
+class UDPSender(object):
+    def __init__(self, socket, reply_address, binding):
+        self.mavlink = binding()(self, srcSystem=255)
+        self.reply_address = reply_address
+        self.socket = socket
+
+    def write(self, buf):
+        """Writes to socket. This function is called by the mavlink binding"""
+        if self.reply_address is not None:
+            self.socket.sendto(buf, self.reply_address)
+
+    def send(self, message):
+        self.mavlink.send(message)
+
 class UDPConnection(object):
 
     def __init__(self, type, host, port, binding, binding_name, update_driconxwsockets):
-        self.mavlink = binding()(self, srcSystem=255)
+        self.binding = binding
+        self.mavlink = binding()(None, srcSystem=255)
         self.socket = None
         self.update_driconxwsockets = update_driconxwsockets    # function to update connections
 
@@ -37,10 +52,10 @@ class UDPConnection(object):
         self.properties['connecting'] = False
         self.properties['connected'] = True
         self.properties['systems'] = []
-        self.properties['reply_address'] = ((str(host), int(port)))     # ???
         self.properties['type'] = type
         self.properties['port'] = port
         self.properties['systems_last_time'] = {}
+        self.senders = {}
 
     def connect(self):
         typesocks = {'tcp': socket.SOCK_STREAM, 'udp': socket.SOCK_DGRAM}
@@ -54,33 +69,22 @@ class UDPConnection(object):
         # self.update_driconxwsockets()
         spawn(self._listen)
 
-        
-        
-
-    def write(self,buf):
-        try:
-            self.socket.sendto(buf, self.properties['reply_address'])
-        except Exception as e:
-            raise e
-
-    def send(self, message):
-        if self.properties['connected'] == True:
-            return self.mavlink.send(message)
-        else:
-            return None
-
-    def read(self):
-        # we ignore the return address and always send to address
-        data, return_address = self.socket.recvfrom(1024)
-        self.properties['reply_address'] = return_address
-        return data
+    def send(self, message, systemID):
+        # check if connected, if not, return
+        if self.properties['connected'] == False:
+            return
+        # check if system with <systemID> available, if not, raise exception
+        if systemID not in self.senders:
+            raise dric.exceptions.NotFound("system '{}' not found".format(systemID))
+        self.senders[systemID].send(message)
 
     def _listen(self):
         try:
             while True:
                 if not self.properties['connected']:
                     return
-                data = self.read()
+
+                data, reply_address = self.socket.recvfrom(1024)
 
                 dric.bus.publish('MAVLINK_RAW', self.properties['name'], data, self.mavlink)
                 sleep(0.0001) # security
@@ -89,10 +93,17 @@ class UDPConnection(object):
                     if messages is None:
                         continue
                     for mav_message in messages:
-                        esid = self.properties['name'] + "-" + str(mav_message.get_srcSystem())
-                        if esid not in self.properties['systems']:
+                        systemID = mav_message.get_srcSystem()
+                        esid = self.properties['name'] + "-" + str(systemID)
+
+                        # add system to senders if necessary and update connection list of clients
+                        if systemID not in self.senders:
                             self.properties['systems'].append(esid)
+                            self.senders[systemID] = UDPSender(self.socket, reply_address, self.binding)
                             self.update_driconxwsockets()
+                        else:
+                            self.senders[systemID].reply_address = reply_address
+
                         dric.bus.publish('MAVLINK', esid, mav_message)
 
                 except Exception as e:
@@ -347,7 +358,8 @@ class DriconxPlugin(dric.Plugin):
     def send_mav_cmd(self, esid, command, parameters):
 
         # get connection from esid
-        connection = self.get_connection_from_name(esid)
+        (connection_name, systemID) = esid.split("-")
+        connection = self.get_connection_from_name(connection_name)
 
         module = inspect.getmodule(connection.mavlink)
 
@@ -369,16 +381,14 @@ class DriconxPlugin(dric.Plugin):
         parameters = [parameters[param_name] for param_name in message_class.fieldnames]
 
         # send message
-        connection.send(message_class(*parameters))
+        connection.send(message_class(*parameters), systemID)
         
     def get_connection_from_request(self, request):
         connection_properties = loads(request.get_data(as_text=True))
         connection_name = connection_properties['name']
-
         return (self.get_connection_from_name(connection_name), connection_name)
 
     def get_connection_from_name(self, connection_name):
-        connection_name = connection_name.split("-")[0]
         if connection_name not in self.connections:
             raise dric.exceptions.NotFound("Connection '{}' not found".format(connection_name))
         return self.connections[connection_name]
