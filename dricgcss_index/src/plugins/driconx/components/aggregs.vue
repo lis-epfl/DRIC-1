@@ -102,7 +102,8 @@ export default {
           var system = connection.systems[j]
           var systemAggreg = this.systemAggregation(system, this.aggregateById)
           if (systemAggreg === null) {
-            this.aggregations.push(new Aggregation([{ esid: system, connection: connection }], system))
+            var aggregName = 'Drone_' + system.substring(system.indexOf('-') + 1)
+            this.aggregations.push(new Aggregation([{ esid: system, connection: connection }], aggregName))
           } else if (systemAggreg.esidList.findIndex(e => e.esid === system) === -1) {
             // remove from all aggregs
             this.aggregations.map(a => a.esidList).forEach(l => l.removeIf(e => e.esid === system))
