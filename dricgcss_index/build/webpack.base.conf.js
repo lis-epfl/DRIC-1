@@ -79,7 +79,7 @@ module.exports = {
         }
       }
     ],
-    noParse: [/\/openlayers\//]
+    noParse: [/\/openlayers\/dist\/ol.js/]
   },
   eslint: {
     formatter: require('eslint-friendly-formatter')
