@@ -3,7 +3,7 @@ import * as types from './types.js'
 
 export default {
   state: {
-    maplayer: 'Bing',
+    maplayer: 'Stamen',
     overlay: null
   },
   mutations: {

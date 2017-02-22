@@ -78,7 +78,7 @@ export default {
   mounted () {
     this.positionLayer.esid = this.esid
     this.layer = new ol.layer.Tile({
-      source: this.layerSource('Bing')
+      source: this.layerSource()
     })
     const positionLayer = new ol.layer.Vector({
       source: this.positionLayer.source
