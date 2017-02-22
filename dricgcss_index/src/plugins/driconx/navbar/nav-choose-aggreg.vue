@@ -38,7 +38,7 @@ export default {
   watch: {
     aggregations (aggregations) {
       if (this.active === null) {
-        if (aggregations.length > 1) {
+        if (aggregations.length >= 1) {
           this.active = aggregations[0]
         }
         return
