@@ -31,7 +31,7 @@ export default {
     return {
       tilenames: [],
       defaultTilenames: ['Bing', 'Stamen', 'OSM'],
-      selectedTilename: 'Bing',
+      selectedTilename: this.$store.getters[types.GET_MAP_LAYER],
       selectedOverlay: null
     }
   },

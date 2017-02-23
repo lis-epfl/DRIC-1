@@ -78,7 +78,7 @@ export default {
   mounted () {
     this.positionLayer.esid = this.esid
     this.layer = new ol.layer.Tile({
-      source: this.layerSource('Bing')
+      source: this.layerSource()
     })
     const positionLayer = new ol.layer.Vector({
       source: this.positionLayer.source
@@ -104,7 +104,14 @@ export default {
     }.bind(this))
 
     // if openlayers is not nice -> we have to update things manually
-    require('set-interval-n')(() => this.map.updateSize(), 200, 10)
+    // require('set-interval-n')(() => this.map.updateSize(), 200, 10)
+    let i = 0
+    const interval = setInterval(() => {
+      this.map.updateSize()
+      if (++i === 10) {
+        clearInterval(interval)
+      }
+    }, 200)
     // window.setTimeout(() => this.map.updateSize(), 200)
 
     window.addEventListener('resize', () => this.map.updateSize())
@@ -115,7 +122,7 @@ export default {
 }
 </script>
 <style lang="less">
-@import "../../../node_modules/openlayers/dist/ol.css";
+/*@import "../../../node_modules/openlayers/dist/ol.css";*/
 #map, #mapcontainer {
   height: 100%;
 }

@@ -69,7 +69,9 @@ import { MessagesViewerConfig } from '../config'
 import API from '../api'
 import $ from 'jquery'
 import { convert } from '../conversion.js'
-import format from 'format-duration'
+// import format from 'format-duration'
+import parseMs from 'parse-ms'
+import addZero from 'add-zero'
 
 const Conversion = window.Conversion
 const api = new API(MessagesViewerConfig)
@@ -95,7 +97,8 @@ export default {
     }
   },
   methods: {
-    format,
+    parseMs,
+    addZero,
     allTimeHref (key) {
       return api.allHref(this.type, this.$store.getters['driconx/ACTIVE_ESIDS'], [key])
     },
@@ -160,10 +163,20 @@ export default {
       if (this.to === null) {
         return null
       }
-
       const durationsec = this.to - this.from
       const mspart = Math.floor(durationsec * 1000) - Math.floor(durationsec) * 1000
-      return format(durationsec * 1000) + '.' + mspart
+      // this part is copied from format-duration package
+      var duration
+      let { days, hours, minutes, seconds } = parseMs(durationsec * 1000)
+      seconds = addZero(seconds)
+      if (days) {
+        duration = `${days}:${addZero(hours)}:${addZero(minutes)}:${seconds}.` + mspart
+      } else if (hours) {
+        duration = `${hours}:${addZero(minutes)}:${seconds}.` + mspart
+      } else {
+        duration = `${minutes}:${seconds}.` + mspart
+      }
+      return duration
     }
   },
   created () {
