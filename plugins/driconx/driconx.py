@@ -98,8 +98,8 @@ class UDPConnection(object):
 
                         # add system to senders if necessary and update connection list of clients
                         if systemID not in self.senders:
-                            self.properties['systems'].append(esid)
                             self.senders[systemID] = UDPSender(self.socket, reply_address, self.binding)
+                            self.properties['systems'].append(esid)
                             self.update_driconxwsockets()
                         else:
                             self.senders[systemID].reply_address = reply_address
@@ -381,7 +381,7 @@ class DriconxPlugin(dric.Plugin):
         parameters = [parameters[param_name] for param_name in message_class.fieldnames]
 
         # send message
-        connection.send(message_class(*parameters), systemID)
+        connection.send(message_class(*parameters), int(systemID))
         
     def get_connection_from_request(self, request):
         connection_properties = loads(request.get_data(as_text=True))
