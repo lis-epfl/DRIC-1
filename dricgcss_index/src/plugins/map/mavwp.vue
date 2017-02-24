@@ -202,7 +202,7 @@ export default {
         'target_system': 5,
         'target_component': 8,
         'seq': this.waypoints.length,
-        'frame': 0,
+        'frame': 3,  //   MAV_FRAME_GLOBAL_RELATIVE_ALT
         'command': 16,
         'current': 0,
         'autocontinue': 1,
