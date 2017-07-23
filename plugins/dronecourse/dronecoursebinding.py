@@ -5,12 +5,10 @@ Generated from: dronecourse.xml,common.xml
 
 Note: this file has been auto-generated. DO NOT EDIT
 '''
-
-import struct, array, time, json, os, sys, platform
-
-'''MAVLink X25 CRC code'''
+from __future__ import print_function
+from builtins import range
 from builtins import object
-
+import struct, array, time, json, os, sys, platform
 
 class x25crc(object):
     '''x25 CRC - based on checksum.h from mavlink library'''
@@ -42,7 +40,7 @@ class x25crc(object):
 import hashlib
 
 WIRE_PROTOCOL_VERSION = '1.0'
-DIALECT = ''
+DIALECT = 'dronecourse'
 
 PROTOCOL_MARKER_V1 = 0xFE
 PROTOCOL_MARKER_V2 = 0xFD
@@ -317,12 +315,12 @@ MAV_TYPE_HEXAROTOR = 13 # Hexarotor
 enums['MAV_TYPE'][13] = EnumEntry('MAV_TYPE_HEXAROTOR', '''Hexarotor''')
 MAV_TYPE_OCTOROTOR = 14 # Octorotor
 enums['MAV_TYPE'][14] = EnumEntry('MAV_TYPE_OCTOROTOR', '''Octorotor''')
-MAV_TYPE_TRICOPTER = 15 # Tricopter
-enums['MAV_TYPE'][15] = EnumEntry('MAV_TYPE_TRICOPTER', '''Tricopter''')
+MAV_TYPE_TRICOPTER = 15 # Octorotor
+enums['MAV_TYPE'][15] = EnumEntry('MAV_TYPE_TRICOPTER', '''Octorotor''')
 MAV_TYPE_FLAPPING_WING = 16 # Flapping wing
 enums['MAV_TYPE'][16] = EnumEntry('MAV_TYPE_FLAPPING_WING', '''Flapping wing''')
-MAV_TYPE_KITE = 17 # Kite
-enums['MAV_TYPE'][17] = EnumEntry('MAV_TYPE_KITE', '''Kite''')
+MAV_TYPE_KITE = 17 # Flapping wing
+enums['MAV_TYPE'][17] = EnumEntry('MAV_TYPE_KITE', '''Flapping wing''')
 MAV_TYPE_ONBOARD_CONTROLLER = 18 # Onboard companion controller
 enums['MAV_TYPE'][18] = EnumEntry('MAV_TYPE_ONBOARD_CONTROLLER', '''Onboard companion controller''')
 MAV_TYPE_VTOL_DUOROTOR = 19 # Two-rotor VTOL using control surfaces in vertical operation in
@@ -388,13 +386,8 @@ enums['MAV_MODE_FLAG'][32] = EnumEntry('MAV_MODE_FLAG_HIL_ENABLED', '''0b0010000
 MAV_MODE_FLAG_MANUAL_INPUT_ENABLED = 64 # 0b01000000 remote control input is enabled.
 enums['MAV_MODE_FLAG'][64] = EnumEntry('MAV_MODE_FLAG_MANUAL_INPUT_ENABLED', '''0b01000000 remote control input is enabled.''')
 MAV_MODE_FLAG_SAFETY_ARMED = 128 # 0b10000000 MAV safety set to armed. Motors are enabled / running / can
-                        # start. Ready to fly. Additional note: this
-                        # flag is to be ignore when sent in the
-                        # command MAV_CMD_DO_SET_MODE and
-                        # MAV_CMD_COMPONENT_ARM_DISARM shall be used
-                        # instead. The flag can still be used to
-                        # report the armed state.
-enums['MAV_MODE_FLAG'][128] = EnumEntry('MAV_MODE_FLAG_SAFETY_ARMED', '''0b10000000 MAV safety set to armed. Motors are enabled / running / can start. Ready to fly. Additional note: this flag is to be ignore when sent in the command MAV_CMD_DO_SET_MODE and MAV_CMD_COMPONENT_ARM_DISARM shall be used instead. The flag can still be used to report the armed state.''')
+                        # start. Ready to fly.
+enums['MAV_MODE_FLAG'][128] = EnumEntry('MAV_MODE_FLAG_SAFETY_ARMED', '''0b10000000 MAV safety set to armed. Motors are enabled / running / can start. Ready to fly.''')
 MAV_MODE_FLAG_ENUM_END = 129 # 
 enums['MAV_MODE_FLAG'][129] = EnumEntry('MAV_MODE_FLAG_ENUM_END', '''''')
 
@@ -1236,12 +1229,12 @@ enums['MAV_CMD'][204].param[6] = '''Empty'''
 enums['MAV_CMD'][204].param[7] = '''Empty'''
 MAV_CMD_DO_MOUNT_CONTROL = 205 # Mission command to control a camera or antenna mount
 enums['MAV_CMD'][205] = EnumEntry('MAV_CMD_DO_MOUNT_CONTROL', '''Mission command to control a camera or antenna mount''')
-enums['MAV_CMD'][205].param[1] = '''pitch (WIP: DEPRECATED: or lat in degrees) depending on mount mode.'''
-enums['MAV_CMD'][205].param[2] = '''roll (WIP: DEPRECATED: or lon in degrees) depending on mount mode.'''
-enums['MAV_CMD'][205].param[3] = '''yaw (WIP: DEPRECATED: or alt in meters) depending on mount mode.'''
-enums['MAV_CMD'][205].param[4] = '''WIP: alt in meters depending on mount mode.'''
-enums['MAV_CMD'][205].param[5] = '''WIP: latitude in degrees * 1E7, set if appropriate mount mode.'''
-enums['MAV_CMD'][205].param[6] = '''WIP: longitude in degrees * 1E7, set if appropriate mount mode.'''
+enums['MAV_CMD'][205].param[1] = '''pitch or lat in degrees, depending on mount mode.'''
+enums['MAV_CMD'][205].param[2] = '''roll or lon in degrees depending on mount mode'''
+enums['MAV_CMD'][205].param[3] = '''yaw or alt (in meters) depending on mount mode'''
+enums['MAV_CMD'][205].param[4] = '''reserved'''
+enums['MAV_CMD'][205].param[5] = '''reserved'''
+enums['MAV_CMD'][205].param[6] = '''reserved'''
 enums['MAV_CMD'][205].param[7] = '''MAV_MOUNT_MODE enum value'''
 MAV_CMD_DO_SET_CAM_TRIGG_DIST = 206 # Mission command to set CAM_TRIGG_DIST for this flight
 enums['MAV_CMD'][206] = EnumEntry('MAV_CMD_DO_SET_CAM_TRIGG_DIST', '''Mission command to set CAM_TRIGG_DIST for this flight''')
@@ -1288,15 +1281,6 @@ enums['MAV_CMD'][210].param[4] = '''Empty'''
 enums['MAV_CMD'][210].param[5] = '''Empty'''
 enums['MAV_CMD'][210].param[6] = '''Empty'''
 enums['MAV_CMD'][210].param[7] = '''Empty'''
-MAV_CMD_DO_SET_POSITION_YAW_THRUST = 213 # Sets a desired vehicle turn angle and thrust change
-enums['MAV_CMD'][213] = EnumEntry('MAV_CMD_DO_SET_POSITION_YAW_THRUST', '''Sets a desired vehicle turn angle and thrust change''')
-enums['MAV_CMD'][213].param[1] = '''yaw angle to adjust steering by in centidegress'''
-enums['MAV_CMD'][213].param[2] = '''Thrust - normalized to -2 .. 2'''
-enums['MAV_CMD'][213].param[3] = '''Empty'''
-enums['MAV_CMD'][213].param[4] = '''Empty'''
-enums['MAV_CMD'][213].param[5] = '''Empty'''
-enums['MAV_CMD'][213].param[6] = '''Empty'''
-enums['MAV_CMD'][213].param[7] = '''Empty'''
 MAV_CMD_DO_MOUNT_CONTROL_QUAT = 220 # Mission command to control a camera or antenna mount, using a
                         # quaternion as reference.
 enums['MAV_CMD'][220] = EnumEntry('MAV_CMD_DO_MOUNT_CONTROL_QUAT', '''Mission command to control a camera or antenna mount, using a quaternion as reference.''')
@@ -1392,11 +1376,11 @@ MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN = 246 # Request the reboot or shutdown of syst
 enums['MAV_CMD'][246] = EnumEntry('MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN', '''Request the reboot or shutdown of system components.''')
 enums['MAV_CMD'][246].param[1] = '''0: Do nothing for autopilot, 1: Reboot autopilot, 2: Shutdown autopilot, 3: Reboot autopilot and keep it in the bootloader until upgraded.'''
 enums['MAV_CMD'][246].param[2] = '''0: Do nothing for onboard computer, 1: Reboot onboard computer, 2: Shutdown onboard computer, 3: Reboot onboard computer and keep it in the bootloader until upgraded.'''
-enums['MAV_CMD'][246].param[3] = '''WIP: 0: Do nothing for camera, 1: Reboot onboard camera, 2: Shutdown onboard camera, 3: Reboot onboard camera and keep it in the bootloader until upgraded'''
-enums['MAV_CMD'][246].param[4] = '''WIP: 0: Do nothing for mount (e.g. gimbal), 1: Reboot mount, 2: Shutdown mount, 3: Reboot mount and keep it in the bootloader until upgraded'''
+enums['MAV_CMD'][246].param[3] = '''Reserved, send 0'''
+enums['MAV_CMD'][246].param[4] = '''Reserved, send 0'''
 enums['MAV_CMD'][246].param[5] = '''Reserved, send 0'''
 enums['MAV_CMD'][246].param[6] = '''Reserved, send 0'''
-enums['MAV_CMD'][246].param[7] = '''WIP: ID (e.g. camera ID -1 for all IDs)'''
+enums['MAV_CMD'][246].param[7] = '''Reserved, send 0'''
 MAV_CMD_OVERRIDE_GOTO = 252 # Hold / continue the current action
 enums['MAV_CMD'][252] = EnumEntry('MAV_CMD_OVERRIDE_GOTO', '''Hold / continue the current action''')
 enums['MAV_CMD'][252].param[1] = '''MAV_GOTO_DO_HOLD: hold MAV_GOTO_DO_CONTINUE: continue with next item in mission plan'''
@@ -1440,64 +1424,14 @@ MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES = 520 # Request autopilot capabilities
 enums['MAV_CMD'][520] = EnumEntry('MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES', '''Request autopilot capabilities''')
 enums['MAV_CMD'][520].param[1] = '''1: Request autopilot version'''
 enums['MAV_CMD'][520].param[2] = '''Reserved (all remaining params)'''
-MAV_CMD_REQUEST_CAMERA_INFORMATION = 521 # WIP: Request camera information (CAMERA_INFORMATION)
-enums['MAV_CMD'][521] = EnumEntry('MAV_CMD_REQUEST_CAMERA_INFORMATION', '''WIP: Request camera information (CAMERA_INFORMATION)''')
-enums['MAV_CMD'][521].param[1] = '''1: Request camera capabilities'''
-enums['MAV_CMD'][521].param[2] = '''Camera ID'''
-enums['MAV_CMD'][521].param[3] = '''Reserved (all remaining params)'''
-MAV_CMD_REQUEST_CAMERA_SETTINGS = 522 # WIP: Request camera settings (CAMERA_SETTINGS)
-enums['MAV_CMD'][522] = EnumEntry('MAV_CMD_REQUEST_CAMERA_SETTINGS', '''WIP: Request camera settings (CAMERA_SETTINGS)''')
-enums['MAV_CMD'][522].param[1] = '''1: Request camera settings'''
-enums['MAV_CMD'][522].param[2] = '''Camera ID'''
-enums['MAV_CMD'][522].param[3] = '''Reserved (all remaining params)'''
-MAV_CMD_SET_CAMERA_SETTINGS_1 = 523 # WIP: Set the camera settings part 1 (CAMERA_SETTINGS)
-enums['MAV_CMD'][523] = EnumEntry('MAV_CMD_SET_CAMERA_SETTINGS_1', '''WIP: Set the camera settings part 1 (CAMERA_SETTINGS)''')
-enums['MAV_CMD'][523].param[1] = '''Camera ID'''
-enums['MAV_CMD'][523].param[2] = '''Aperture (1/value)'''
-enums['MAV_CMD'][523].param[3] = '''Aperture locked (0: auto, 1: locked)'''
-enums['MAV_CMD'][523].param[4] = '''Shutter speed in s'''
-enums['MAV_CMD'][523].param[5] = '''Shutter speed locked (0: auto, 1: locked)'''
-enums['MAV_CMD'][523].param[6] = '''ISO sensitivity'''
-enums['MAV_CMD'][523].param[7] = '''ISO sensitivity locked (0: auto, 1: locked)'''
-MAV_CMD_SET_CAMERA_SETTINGS_2 = 524 # WIP: Set the camera settings part 2 (CAMERA_SETTINGS)
-enums['MAV_CMD'][524] = EnumEntry('MAV_CMD_SET_CAMERA_SETTINGS_2', '''WIP: Set the camera settings part 2 (CAMERA_SETTINGS)''')
-enums['MAV_CMD'][524].param[1] = '''Camera ID'''
-enums['MAV_CMD'][524].param[2] = '''White balance locked (0: auto, 1: locked)'''
-enums['MAV_CMD'][524].param[3] = '''White balance (color temperature in K)'''
-enums['MAV_CMD'][524].param[4] = '''Reserved for camera mode ID'''
-enums['MAV_CMD'][524].param[5] = '''Reserved for color mode ID'''
-enums['MAV_CMD'][524].param[6] = '''Reserved for image format ID'''
-enums['MAV_CMD'][524].param[7] = '''Reserved'''
-MAV_CMD_REQUEST_STORAGE_INFORMATION = 525 # WIP: Request storage information (STORAGE_INFORMATION)
-enums['MAV_CMD'][525] = EnumEntry('MAV_CMD_REQUEST_STORAGE_INFORMATION', '''WIP: Request storage information (STORAGE_INFORMATION)''')
-enums['MAV_CMD'][525].param[1] = '''1: Request storage information'''
-enums['MAV_CMD'][525].param[2] = '''Storage ID'''
-enums['MAV_CMD'][525].param[3] = '''Reserved (all remaining params)'''
-MAV_CMD_STORAGE_FORMAT = 526 # WIP: Format a storage medium
-enums['MAV_CMD'][526] = EnumEntry('MAV_CMD_STORAGE_FORMAT', '''WIP: Format a storage medium''')
-enums['MAV_CMD'][526].param[1] = '''1: Format storage'''
-enums['MAV_CMD'][526].param[2] = '''Storage ID'''
-enums['MAV_CMD'][526].param[3] = '''Reserved (all remaining params)'''
-MAV_CMD_REQUEST_CAMERA_CAPTURE_STATUS = 527 # WIP: Request camera capture status (CAMERA_CAPTURE_STATUS)
-enums['MAV_CMD'][527] = EnumEntry('MAV_CMD_REQUEST_CAMERA_CAPTURE_STATUS', '''WIP: Request camera capture status (CAMERA_CAPTURE_STATUS)''')
-enums['MAV_CMD'][527].param[1] = '''1: Request camera capture status'''
-enums['MAV_CMD'][527].param[2] = '''Camera ID'''
-enums['MAV_CMD'][527].param[3] = '''Reserved (all remaining params)'''
-MAV_CMD_REQUEST_FLIGHT_INFORMATION = 528 # WIP: Request flight information (FLIGHT_INFORMATION)
-enums['MAV_CMD'][528] = EnumEntry('MAV_CMD_REQUEST_FLIGHT_INFORMATION', '''WIP: Request flight information (FLIGHT_INFORMATION)''')
-enums['MAV_CMD'][528].param[1] = '''1: Request flight information'''
-enums['MAV_CMD'][528].param[2] = '''Reserved (all remaining params)'''
 MAV_CMD_IMAGE_START_CAPTURE = 2000 # Start image capture sequence
 enums['MAV_CMD'][2000] = EnumEntry('MAV_CMD_IMAGE_START_CAPTURE', '''Start image capture sequence''')
 enums['MAV_CMD'][2000].param[1] = '''Duration between two consecutive pictures (in seconds)'''
 enums['MAV_CMD'][2000].param[2] = '''Number of images to capture total - 0 for unlimited capture'''
-enums['MAV_CMD'][2000].param[3] = '''Resolution in megapixels (0.3 for 640x480, 1.3 for 1280x720, etc), set to 0 if param 4/5 are used'''
-enums['MAV_CMD'][2000].param[4] = '''WIP: Resolution horizontal in pixels'''
-enums['MAV_CMD'][2000].param[5] = '''WIP: Resolution horizontal in pixels'''
-enums['MAV_CMD'][2000].param[6] = '''WIP: Camera ID'''
+enums['MAV_CMD'][2000].param[3] = '''Resolution in megapixels (0.3 for 640x480, 1.3 for 1280x720, etc)'''
 MAV_CMD_IMAGE_STOP_CAPTURE = 2001 # Stop image capture sequence
 enums['MAV_CMD'][2001] = EnumEntry('MAV_CMD_IMAGE_STOP_CAPTURE', '''Stop image capture sequence''')
-enums['MAV_CMD'][2001].param[1] = '''Camera ID'''
+enums['MAV_CMD'][2001].param[1] = '''Reserved'''
 enums['MAV_CMD'][2001].param[2] = '''Reserved'''
 MAV_CMD_DO_TRIGGER_CONTROL = 2003 # Enable or disable on-board camera triggering system.
 enums['MAV_CMD'][2003] = EnumEntry('MAV_CMD_DO_TRIGGER_CONTROL', '''Enable or disable on-board camera triggering system.''')
@@ -1508,41 +1442,11 @@ MAV_CMD_VIDEO_START_CAPTURE = 2500 # Starts video capture
 enums['MAV_CMD'][2500] = EnumEntry('MAV_CMD_VIDEO_START_CAPTURE', '''Starts video capture''')
 enums['MAV_CMD'][2500].param[1] = '''Camera ID (0 for all cameras), 1 for first, 2 for second, etc.'''
 enums['MAV_CMD'][2500].param[2] = '''Frames per second'''
-enums['MAV_CMD'][2500].param[3] = '''Resolution in megapixels (0.3 for 640x480, 1.3 for 1280x720, etc), set to 0 if param 4/5 are used'''
-enums['MAV_CMD'][2500].param[4] = '''WIP: Resolution horizontal in pixels'''
-enums['MAV_CMD'][2500].param[5] = '''WIP: Resolution horizontal in pixels'''
+enums['MAV_CMD'][2500].param[3] = '''Resolution in megapixels (0.3 for 640x480, 1.3 for 1280x720, etc)'''
 MAV_CMD_VIDEO_STOP_CAPTURE = 2501 # Stop the current video capture
 enums['MAV_CMD'][2501] = EnumEntry('MAV_CMD_VIDEO_STOP_CAPTURE', '''Stop the current video capture''')
-enums['MAV_CMD'][2501].param[1] = '''WIP: Camera ID'''
+enums['MAV_CMD'][2501].param[1] = '''Reserved'''
 enums['MAV_CMD'][2501].param[2] = '''Reserved'''
-MAV_CMD_LOGGING_START = 2510 # Request to start streaming logging data over MAVLink (see also
-                        # LOGGING_DATA message)
-enums['MAV_CMD'][2510] = EnumEntry('MAV_CMD_LOGGING_START', '''Request to start streaming logging data over MAVLink (see also LOGGING_DATA message)''')
-enums['MAV_CMD'][2510].param[1] = '''Format: 0: ULog'''
-enums['MAV_CMD'][2510].param[2] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2510].param[3] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2510].param[4] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2510].param[5] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2510].param[6] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2510].param[7] = '''Reserved (set to 0)'''
-MAV_CMD_LOGGING_STOP = 2511 # Request to stop streaming log data over MAVLink
-enums['MAV_CMD'][2511] = EnumEntry('MAV_CMD_LOGGING_STOP', '''Request to stop streaming log data over MAVLink''')
-enums['MAV_CMD'][2511].param[1] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2511].param[2] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2511].param[3] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2511].param[4] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2511].param[5] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2511].param[6] = '''Reserved (set to 0)'''
-enums['MAV_CMD'][2511].param[7] = '''Reserved (set to 0)'''
-MAV_CMD_AIRFRAME_CONFIGURATION = 2520 # 
-enums['MAV_CMD'][2520] = EnumEntry('MAV_CMD_AIRFRAME_CONFIGURATION', '''''')
-enums['MAV_CMD'][2520].param[1] = '''Landing gear ID (default: 0, -1 for all)'''
-enums['MAV_CMD'][2520].param[2] = '''Landing gear position (Down: 0, Up: 1, NAN for no change)'''
-enums['MAV_CMD'][2520].param[3] = '''Reserved, set to NAN'''
-enums['MAV_CMD'][2520].param[4] = '''Reserved, set to NAN'''
-enums['MAV_CMD'][2520].param[5] = '''Reserved, set to NAN'''
-enums['MAV_CMD'][2520].param[6] = '''Reserved, set to NAN'''
-enums['MAV_CMD'][2520].param[7] = '''Reserved, set to NAN'''
 MAV_CMD_PANORAMA_CREATE = 2800 # Create a panorama at the current position
 enums['MAV_CMD'][2800] = EnumEntry('MAV_CMD_PANORAMA_CREATE', '''Create a panorama at the current position''')
 enums['MAV_CMD'][2800].param[1] = '''Viewing angle horizontal of the panorama (in degrees, +- 0.5 the total angle)'''
@@ -2356,31 +2260,12 @@ enums['MAV_COLLISION_SRC'][1] = EnumEntry('MAV_COLLISION_SRC_MAVLINK_GPS_GLOBAL_
 MAV_COLLISION_SRC_ENUM_END = 2 # 
 enums['MAV_COLLISION_SRC'][2] = EnumEntry('MAV_COLLISION_SRC_ENUM_END', '''''')
 
-# GPS_FIX_TYPE
-enums['GPS_FIX_TYPE'] = {}
-GPS_FIX_TYPE_NO_GPS = 0 # No GPS connected
-enums['GPS_FIX_TYPE'][0] = EnumEntry('GPS_FIX_TYPE_NO_GPS', '''No GPS connected''')
-GPS_FIX_TYPE_NO_FIX = 1 # No position information, GPS is connected
-enums['GPS_FIX_TYPE'][1] = EnumEntry('GPS_FIX_TYPE_NO_FIX', '''No position information, GPS is connected''')
-GPS_FIX_TYPE_2D_FIX = 2 # 2D position
-enums['GPS_FIX_TYPE'][2] = EnumEntry('GPS_FIX_TYPE_2D_FIX', '''2D position''')
-GPS_FIX_TYPE_3D_FIX = 3 # 3D position
-enums['GPS_FIX_TYPE'][3] = EnumEntry('GPS_FIX_TYPE_3D_FIX', '''3D position''')
-GPS_FIX_TYPE_DGPS = 4 # DGPS/SBAS aided 3D position
-enums['GPS_FIX_TYPE'][4] = EnumEntry('GPS_FIX_TYPE_DGPS', '''DGPS/SBAS aided 3D position''')
-GPS_FIX_TYPE_RTK_FLOAT = 5 # RTK float, 3D position
-enums['GPS_FIX_TYPE'][5] = EnumEntry('GPS_FIX_TYPE_RTK_FLOAT', '''RTK float, 3D position''')
-GPS_FIX_TYPE_RTK_FIXED = 6 # RTK Fixed, 3D position
-enums['GPS_FIX_TYPE'][6] = EnumEntry('GPS_FIX_TYPE_RTK_FIXED', '''RTK Fixed, 3D position''')
-GPS_FIX_TYPE_STATIC = 7 # Static fixed, typically used for base stations
-enums['GPS_FIX_TYPE'][7] = EnumEntry('GPS_FIX_TYPE_STATIC', '''Static fixed, typically used for base stations''')
-GPS_FIX_TYPE_ENUM_END = 8 # 
-enums['GPS_FIX_TYPE'][8] = EnumEntry('GPS_FIX_TYPE_ENUM_END', '''''')
-
 # message IDs
 MAVLINK_MSG_ID_BAD_DATA = -1
 MAVLINK_MSG_ID_TARGET_POSITION_NED = 150
 MAVLINK_MSG_ID_TARGET_POSITION_NED_FILTERED = 151
+MAVLINK_MSG_ID_TARGET_POSITION_IMAGE = 152
+MAVLINK_MSG_ID_GIMBAL_COMMAND = 153
 MAVLINK_MSG_ID_HEARTBEAT = 0
 MAVLINK_MSG_ID_SYS_STATUS = 1
 MAVLINK_MSG_ID_SYSTEM_TIME = 2
@@ -2502,7 +2387,6 @@ MAVLINK_MSG_ID_ESTIMATOR_STATUS = 230
 MAVLINK_MSG_ID_WIND_COV = 231
 MAVLINK_MSG_ID_GPS_INPUT = 232
 MAVLINK_MSG_ID_GPS_RTCM_DATA = 233
-MAVLINK_MSG_ID_HIGH_LATENCY = 234
 MAVLINK_MSG_ID_VIBRATION = 241
 MAVLINK_MSG_ID_HOME_POSITION = 242
 MAVLINK_MSG_ID_SET_HOME_POSITION = 243
@@ -2524,28 +2408,25 @@ class MAVLink_target_position_ned_message(MAVLink_message):
         '''
         id = MAVLINK_MSG_ID_TARGET_POSITION_NED
         name = 'TARGET_POSITION_NED'
-        fieldnames = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'target_num']
-        ordered_fieldnames = [ 'x', 'y', 'z', 'vx', 'vy', 'vz', 'target_num' ]
-        format = '<ffffffB'
-        native_format = bytearray('<ffffffB', 'ascii')
-        orders = [0, 1, 2, 3, 4, 5, 6]
-        lengths = [1, 1, 1, 1, 1, 1, 1]
-        array_lengths = [0, 0, 0, 0, 0, 0, 0]
-        crc_extra = 12
+        fieldnames = ['x', 'y', 'z', 'target_num']
+        ordered_fieldnames = [ 'x', 'y', 'z', 'target_num' ]
+        format = '<fffB'
+        native_format = bytearray('<fffB', 'ascii')
+        orders = [0, 1, 2, 3]
+        lengths = [1, 1, 1, 1]
+        array_lengths = [0, 0, 0, 0]
+        crc_extra = 136
 
-        def __init__(self, x, y, z, vx, vy, vz, target_num):
+        def __init__(self, x, y, z, target_num):
                 MAVLink_message.__init__(self, MAVLink_target_position_ned_message.id, MAVLink_target_position_ned_message.name)
                 self._fieldnames = MAVLink_target_position_ned_message.fieldnames
                 self.x = x
                 self.y = y
                 self.z = z
-                self.vx = vx
-                self.vy = vy
-                self.vz = vz
                 self.target_num = target_num
 
         def pack(self, mav, force_mavlink1=False):
-                return MAVLink_message.pack(self, mav, 12, struct.pack('<ffffffB', self.x, self.y, self.z, self.vx, self.vy, self.vz, self.target_num), force_mavlink1=force_mavlink1)
+                return MAVLink_message.pack(self, mav, 136, struct.pack('<fffB', self.x, self.y, self.z, self.target_num), force_mavlink1=force_mavlink1)
 
 class MAVLink_target_position_ned_filtered_message(MAVLink_message):
         '''
@@ -2553,16 +2434,16 @@ class MAVLink_target_position_ned_filtered_message(MAVLink_message):
         '''
         id = MAVLINK_MSG_ID_TARGET_POSITION_NED_FILTERED
         name = 'TARGET_POSITION_NED_FILTERED'
-        fieldnames = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'target_num']
-        ordered_fieldnames = [ 'x', 'y', 'z', 'vx', 'vy', 'vz', 'target_num' ]
-        format = '<ffffffB'
-        native_format = bytearray('<ffffffB', 'ascii')
-        orders = [0, 1, 2, 3, 4, 5, 6]
-        lengths = [1, 1, 1, 1, 1, 1, 1]
-        array_lengths = [0, 0, 0, 0, 0, 0, 0]
-        crc_extra = 38
+        fieldnames = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'var_x', 'var_y', 'var_z', 'var_vx', 'var_vy', 'var_vz', 'target_num']
+        ordered_fieldnames = [ 'x', 'y', 'z', 'vx', 'vy', 'vz', 'var_x', 'var_y', 'var_z', 'var_vx', 'var_vy', 'var_vz', 'target_num' ]
+        format = '<ffffffffffffB'
+        native_format = bytearray('<ffffffffffffB', 'ascii')
+        orders = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        lengths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        crc_extra = 0
 
-        def __init__(self, x, y, z, vx, vy, vz, target_num):
+        def __init__(self, x, y, z, vx, vy, vz, var_x, var_y, var_z, var_vx, var_vy, var_vz, target_num):
                 MAVLink_message.__init__(self, MAVLink_target_position_ned_filtered_message.id, MAVLink_target_position_ned_filtered_message.name)
                 self._fieldnames = MAVLink_target_position_ned_filtered_message.fieldnames
                 self.x = x
@@ -2571,10 +2452,73 @@ class MAVLink_target_position_ned_filtered_message(MAVLink_message):
                 self.vx = vx
                 self.vy = vy
                 self.vz = vz
+                self.var_x = var_x
+                self.var_y = var_y
+                self.var_z = var_z
+                self.var_vx = var_vx
+                self.var_vy = var_vy
+                self.var_vz = var_vz
                 self.target_num = target_num
 
         def pack(self, mav, force_mavlink1=False):
-                return MAVLink_message.pack(self, mav, 38, struct.pack('<ffffffB', self.x, self.y, self.z, self.vx, self.vy, self.vz, self.target_num), force_mavlink1=force_mavlink1)
+                return MAVLink_message.pack(self, mav, 0, struct.pack('<ffffffffffffB', self.x, self.y, self.z, self.vx, self.vy, self.vz, self.var_x, self.var_y, self.var_z, self.var_vx, self.var_vy, self.var_vz, self.target_num), force_mavlink1=force_mavlink1)
+
+class MAVLink_target_position_image_message(MAVLink_message):
+        '''
+        This message encodes the position of a target in an image
+        '''
+        id = MAVLINK_MSG_ID_TARGET_POSITION_IMAGE
+        name = 'TARGET_POSITION_IMAGE'
+        fieldnames = ['time_usec', 'u', 'v', 'dist', 'pitch', 'yaw', 'var_u', 'var_v', 'var_z', 'target_num']
+        ordered_fieldnames = [ 'time_usec', 'u', 'v', 'dist', 'pitch', 'yaw', 'var_u', 'var_v', 'var_z', 'target_num' ]
+        format = '<QIIffffffB'
+        native_format = bytearray('<QIIffffffB', 'ascii')
+        orders = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        lengths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        crc_extra = 203
+
+        def __init__(self, time_usec, u, v, dist, pitch, yaw, var_u, var_v, var_z, target_num):
+                MAVLink_message.__init__(self, MAVLink_target_position_image_message.id, MAVLink_target_position_image_message.name)
+                self._fieldnames = MAVLink_target_position_image_message.fieldnames
+                self.time_usec = time_usec
+                self.u = u
+                self.v = v
+                self.dist = dist
+                self.pitch = pitch
+                self.yaw = yaw
+                self.var_u = var_u
+                self.var_v = var_v
+                self.var_z = var_z
+                self.target_num = target_num
+
+        def pack(self, mav, force_mavlink1=False):
+                return MAVLink_message.pack(self, mav, 203, struct.pack('<QIIffffffB', self.time_usec, self.u, self.v, self.dist, self.pitch, self.yaw, self.var_u, self.var_v, self.var_z, self.target_num), force_mavlink1=force_mavlink1)
+
+class MAVLink_gimbal_command_message(MAVLink_message):
+        '''
+        This message encodes the position of a target in an image
+        '''
+        id = MAVLINK_MSG_ID_GIMBAL_COMMAND
+        name = 'GIMBAL_COMMAND'
+        fieldnames = ['time_usec', 'pitch', 'yaw']
+        ordered_fieldnames = [ 'time_usec', 'pitch', 'yaw' ]
+        format = '<Qff'
+        native_format = bytearray('<Qff', 'ascii')
+        orders = [0, 1, 2]
+        lengths = [1, 1, 1]
+        array_lengths = [0, 0, 0]
+        crc_extra = 109
+
+        def __init__(self, time_usec, pitch, yaw):
+                MAVLink_message.__init__(self, MAVLink_gimbal_command_message.id, MAVLink_gimbal_command_message.name)
+                self._fieldnames = MAVLink_gimbal_command_message.fieldnames
+                self.time_usec = time_usec
+                self.pitch = pitch
+                self.yaw = yaw
+
+        def pack(self, mav, force_mavlink1=False):
+                return MAVLink_message.pack(self, mav, 109, struct.pack('<Qff', self.time_usec, self.pitch, self.yaw), force_mavlink1=force_mavlink1)
 
 class MAVLink_heartbeat_message(MAVLink_message):
         '''
@@ -3866,19 +3810,19 @@ class MAVLink_attitude_quaternion_cov_message(MAVLink_message):
         '''
         id = MAVLINK_MSG_ID_ATTITUDE_QUATERNION_COV
         name = 'ATTITUDE_QUATERNION_COV'
-        fieldnames = ['time_usec', 'q', 'rollspeed', 'pitchspeed', 'yawspeed', 'covariance']
-        ordered_fieldnames = [ 'time_usec', 'q', 'rollspeed', 'pitchspeed', 'yawspeed', 'covariance' ]
-        format = '<Q4ffff9f'
-        native_format = bytearray('<Qfffff', 'ascii')
+        fieldnames = ['time_boot_ms', 'q', 'rollspeed', 'pitchspeed', 'yawspeed', 'covariance']
+        ordered_fieldnames = [ 'time_boot_ms', 'q', 'rollspeed', 'pitchspeed', 'yawspeed', 'covariance' ]
+        format = '<I4ffff9f'
+        native_format = bytearray('<Ifffff', 'ascii')
         orders = [0, 1, 2, 3, 4, 5]
         lengths = [1, 4, 1, 1, 1, 9]
         array_lengths = [0, 4, 0, 0, 0, 9]
-        crc_extra = 167
+        crc_extra = 153
 
-        def __init__(self, time_usec, q, rollspeed, pitchspeed, yawspeed, covariance):
+        def __init__(self, time_boot_ms, q, rollspeed, pitchspeed, yawspeed, covariance):
                 MAVLink_message.__init__(self, MAVLink_attitude_quaternion_cov_message.id, MAVLink_attitude_quaternion_cov_message.name)
                 self._fieldnames = MAVLink_attitude_quaternion_cov_message.fieldnames
-                self.time_usec = time_usec
+                self.time_boot_ms = time_boot_ms
                 self.q = q
                 self.rollspeed = rollspeed
                 self.pitchspeed = pitchspeed
@@ -3886,7 +3830,7 @@ class MAVLink_attitude_quaternion_cov_message(MAVLink_message):
                 self.covariance = covariance
 
         def pack(self, mav, force_mavlink1=False):
-                return MAVLink_message.pack(self, mav, 167, struct.pack('<Q4ffff9f', self.time_usec, self.q[0], self.q[1], self.q[2], self.q[3], self.rollspeed, self.pitchspeed, self.yawspeed, self.covariance[0], self.covariance[1], self.covariance[2], self.covariance[3], self.covariance[4], self.covariance[5], self.covariance[6], self.covariance[7], self.covariance[8]), force_mavlink1=force_mavlink1)
+                return MAVLink_message.pack(self, mav, 153, struct.pack('<I4ffff9f', self.time_boot_ms, self.q[0], self.q[1], self.q[2], self.q[3], self.rollspeed, self.pitchspeed, self.yawspeed, self.covariance[0], self.covariance[1], self.covariance[2], self.covariance[3], self.covariance[4], self.covariance[5], self.covariance[6], self.covariance[7], self.covariance[8]), force_mavlink1=force_mavlink1)
 
 class MAVLink_nav_controller_output_message(MAVLink_message):
         '''
@@ -3932,19 +3876,20 @@ class MAVLink_global_position_int_cov_message(MAVLink_message):
         '''
         id = MAVLINK_MSG_ID_GLOBAL_POSITION_INT_COV
         name = 'GLOBAL_POSITION_INT_COV'
-        fieldnames = ['time_usec', 'estimator_type', 'lat', 'lon', 'alt', 'relative_alt', 'vx', 'vy', 'vz', 'covariance']
-        ordered_fieldnames = [ 'time_usec', 'lat', 'lon', 'alt', 'relative_alt', 'vx', 'vy', 'vz', 'covariance', 'estimator_type' ]
-        format = '<Qiiiifff36fB'
-        native_format = bytearray('<QiiiiffffB', 'ascii')
-        orders = [0, 9, 1, 2, 3, 4, 5, 6, 7, 8]
-        lengths = [1, 1, 1, 1, 1, 1, 1, 1, 36, 1]
-        array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 36, 0]
-        crc_extra = 119
+        fieldnames = ['time_boot_ms', 'time_utc', 'estimator_type', 'lat', 'lon', 'alt', 'relative_alt', 'vx', 'vy', 'vz', 'covariance']
+        ordered_fieldnames = [ 'time_utc', 'time_boot_ms', 'lat', 'lon', 'alt', 'relative_alt', 'vx', 'vy', 'vz', 'covariance', 'estimator_type' ]
+        format = '<QIiiiifff36fB'
+        native_format = bytearray('<QIiiiiffffB', 'ascii')
+        orders = [1, 0, 10, 2, 3, 4, 5, 6, 7, 8, 9]
+        lengths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 36, 1]
+        array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0]
+        crc_extra = 51
 
-        def __init__(self, time_usec, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance):
+        def __init__(self, time_boot_ms, time_utc, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance):
                 MAVLink_message.__init__(self, MAVLink_global_position_int_cov_message.id, MAVLink_global_position_int_cov_message.name)
                 self._fieldnames = MAVLink_global_position_int_cov_message.fieldnames
-                self.time_usec = time_usec
+                self.time_boot_ms = time_boot_ms
+                self.time_utc = time_utc
                 self.estimator_type = estimator_type
                 self.lat = lat
                 self.lon = lon
@@ -3956,7 +3901,7 @@ class MAVLink_global_position_int_cov_message(MAVLink_message):
                 self.covariance = covariance
 
         def pack(self, mav, force_mavlink1=False):
-                return MAVLink_message.pack(self, mav, 119, struct.pack('<Qiiiifff36fB', self.time_usec, self.lat, self.lon, self.alt, self.relative_alt, self.vx, self.vy, self.vz, self.covariance[0], self.covariance[1], self.covariance[2], self.covariance[3], self.covariance[4], self.covariance[5], self.covariance[6], self.covariance[7], self.covariance[8], self.covariance[9], self.covariance[10], self.covariance[11], self.covariance[12], self.covariance[13], self.covariance[14], self.covariance[15], self.covariance[16], self.covariance[17], self.covariance[18], self.covariance[19], self.covariance[20], self.covariance[21], self.covariance[22], self.covariance[23], self.covariance[24], self.covariance[25], self.covariance[26], self.covariance[27], self.covariance[28], self.covariance[29], self.covariance[30], self.covariance[31], self.covariance[32], self.covariance[33], self.covariance[34], self.covariance[35], self.estimator_type), force_mavlink1=force_mavlink1)
+                return MAVLink_message.pack(self, mav, 51, struct.pack('<QIiiiifff36fB', self.time_utc, self.time_boot_ms, self.lat, self.lon, self.alt, self.relative_alt, self.vx, self.vy, self.vz, self.covariance[0], self.covariance[1], self.covariance[2], self.covariance[3], self.covariance[4], self.covariance[5], self.covariance[6], self.covariance[7], self.covariance[8], self.covariance[9], self.covariance[10], self.covariance[11], self.covariance[12], self.covariance[13], self.covariance[14], self.covariance[15], self.covariance[16], self.covariance[17], self.covariance[18], self.covariance[19], self.covariance[20], self.covariance[21], self.covariance[22], self.covariance[23], self.covariance[24], self.covariance[25], self.covariance[26], self.covariance[27], self.covariance[28], self.covariance[29], self.covariance[30], self.covariance[31], self.covariance[32], self.covariance[33], self.covariance[34], self.covariance[35], self.estimator_type), force_mavlink1=force_mavlink1)
 
 class MAVLink_local_position_ned_cov_message(MAVLink_message):
         '''
@@ -3966,19 +3911,20 @@ class MAVLink_local_position_ned_cov_message(MAVLink_message):
         '''
         id = MAVLINK_MSG_ID_LOCAL_POSITION_NED_COV
         name = 'LOCAL_POSITION_NED_COV'
-        fieldnames = ['time_usec', 'estimator_type', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'ax', 'ay', 'az', 'covariance']
-        ordered_fieldnames = [ 'time_usec', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'ax', 'ay', 'az', 'covariance', 'estimator_type' ]
-        format = '<Qfffffffff45fB'
-        native_format = bytearray('<QffffffffffB', 'ascii')
-        orders = [0, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        lengths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 45, 1]
-        array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 0]
-        crc_extra = 191
+        fieldnames = ['time_boot_ms', 'time_utc', 'estimator_type', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'ax', 'ay', 'az', 'covariance']
+        ordered_fieldnames = [ 'time_utc', 'time_boot_ms', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'ax', 'ay', 'az', 'covariance', 'estimator_type' ]
+        format = '<QIfffffffff45fB'
+        native_format = bytearray('<QIffffffffffB', 'ascii')
+        orders = [1, 0, 12, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        lengths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 45, 1]
+        array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 45, 0]
+        crc_extra = 59
 
-        def __init__(self, time_usec, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance):
+        def __init__(self, time_boot_ms, time_utc, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance):
                 MAVLink_message.__init__(self, MAVLink_local_position_ned_cov_message.id, MAVLink_local_position_ned_cov_message.name)
                 self._fieldnames = MAVLink_local_position_ned_cov_message.fieldnames
-                self.time_usec = time_usec
+                self.time_boot_ms = time_boot_ms
+                self.time_utc = time_utc
                 self.estimator_type = estimator_type
                 self.x = x
                 self.y = y
@@ -3992,7 +3938,7 @@ class MAVLink_local_position_ned_cov_message(MAVLink_message):
                 self.covariance = covariance
 
         def pack(self, mav, force_mavlink1=False):
-                return MAVLink_message.pack(self, mav, 191, struct.pack('<Qfffffffff45fB', self.time_usec, self.x, self.y, self.z, self.vx, self.vy, self.vz, self.ax, self.ay, self.az, self.covariance[0], self.covariance[1], self.covariance[2], self.covariance[3], self.covariance[4], self.covariance[5], self.covariance[6], self.covariance[7], self.covariance[8], self.covariance[9], self.covariance[10], self.covariance[11], self.covariance[12], self.covariance[13], self.covariance[14], self.covariance[15], self.covariance[16], self.covariance[17], self.covariance[18], self.covariance[19], self.covariance[20], self.covariance[21], self.covariance[22], self.covariance[23], self.covariance[24], self.covariance[25], self.covariance[26], self.covariance[27], self.covariance[28], self.covariance[29], self.covariance[30], self.covariance[31], self.covariance[32], self.covariance[33], self.covariance[34], self.covariance[35], self.covariance[36], self.covariance[37], self.covariance[38], self.covariance[39], self.covariance[40], self.covariance[41], self.covariance[42], self.covariance[43], self.covariance[44], self.estimator_type), force_mavlink1=force_mavlink1)
+                return MAVLink_message.pack(self, mav, 59, struct.pack('<QIfffffffff45fB', self.time_utc, self.time_boot_ms, self.x, self.y, self.z, self.vx, self.vy, self.vz, self.ax, self.ay, self.az, self.covariance[0], self.covariance[1], self.covariance[2], self.covariance[3], self.covariance[4], self.covariance[5], self.covariance[6], self.covariance[7], self.covariance[8], self.covariance[9], self.covariance[10], self.covariance[11], self.covariance[12], self.covariance[13], self.covariance[14], self.covariance[15], self.covariance[16], self.covariance[17], self.covariance[18], self.covariance[19], self.covariance[20], self.covariance[21], self.covariance[22], self.covariance[23], self.covariance[24], self.covariance[25], self.covariance[26], self.covariance[27], self.covariance[28], self.covariance[29], self.covariance[30], self.covariance[31], self.covariance[32], self.covariance[33], self.covariance[34], self.covariance[35], self.covariance[36], self.covariance[37], self.covariance[38], self.covariance[39], self.covariance[40], self.covariance[41], self.covariance[42], self.covariance[43], self.covariance[44], self.estimator_type), force_mavlink1=force_mavlink1)
 
 class MAVLink_rc_channels_message(MAVLink_message):
         '''
@@ -6370,56 +6316,6 @@ class MAVLink_gps_rtcm_data_message(MAVLink_message):
         def pack(self, mav, force_mavlink1=False):
                 return MAVLink_message.pack(self, mav, 35, struct.pack('<BB180B', self.flags, self.len, self.data[0], self.data[1], self.data[2], self.data[3], self.data[4], self.data[5], self.data[6], self.data[7], self.data[8], self.data[9], self.data[10], self.data[11], self.data[12], self.data[13], self.data[14], self.data[15], self.data[16], self.data[17], self.data[18], self.data[19], self.data[20], self.data[21], self.data[22], self.data[23], self.data[24], self.data[25], self.data[26], self.data[27], self.data[28], self.data[29], self.data[30], self.data[31], self.data[32], self.data[33], self.data[34], self.data[35], self.data[36], self.data[37], self.data[38], self.data[39], self.data[40], self.data[41], self.data[42], self.data[43], self.data[44], self.data[45], self.data[46], self.data[47], self.data[48], self.data[49], self.data[50], self.data[51], self.data[52], self.data[53], self.data[54], self.data[55], self.data[56], self.data[57], self.data[58], self.data[59], self.data[60], self.data[61], self.data[62], self.data[63], self.data[64], self.data[65], self.data[66], self.data[67], self.data[68], self.data[69], self.data[70], self.data[71], self.data[72], self.data[73], self.data[74], self.data[75], self.data[76], self.data[77], self.data[78], self.data[79], self.data[80], self.data[81], self.data[82], self.data[83], self.data[84], self.data[85], self.data[86], self.data[87], self.data[88], self.data[89], self.data[90], self.data[91], self.data[92], self.data[93], self.data[94], self.data[95], self.data[96], self.data[97], self.data[98], self.data[99], self.data[100], self.data[101], self.data[102], self.data[103], self.data[104], self.data[105], self.data[106], self.data[107], self.data[108], self.data[109], self.data[110], self.data[111], self.data[112], self.data[113], self.data[114], self.data[115], self.data[116], self.data[117], self.data[118], self.data[119], self.data[120], self.data[121], self.data[122], self.data[123], self.data[124], self.data[125], self.data[126], self.data[127], self.data[128], self.data[129], self.data[130], self.data[131], self.data[132], self.data[133], self.data[134], self.data[135], self.data[136], self.data[137], self.data[138], self.data[139], self.data[140], self.data[141], self.data[142], self.data[143], self.data[144], self.data[145], self.data[146], self.data[147], self.data[148], self.data[149], self.data[150], self.data[151], self.data[152], self.data[153], self.data[154], self.data[155], self.data[156], self.data[157], self.data[158], self.data[159], self.data[160], self.data[161], self.data[162], self.data[163], self.data[164], self.data[165], self.data[166], self.data[167], self.data[168], self.data[169], self.data[170], self.data[171], self.data[172], self.data[173], self.data[174], self.data[175], self.data[176], self.data[177], self.data[178], self.data[179]), force_mavlink1=force_mavlink1)
 
-class MAVLink_high_latency_message(MAVLink_message):
-        '''
-        Message appropriate for high latency connections like Iridium
-        '''
-        id = MAVLINK_MSG_ID_HIGH_LATENCY
-        name = 'HIGH_LATENCY'
-        fieldnames = ['time_usec', 'base_mode', 'custom_mode', 'landed_state', 'roll', 'pitch', 'heading', 'throttle', 'roll_sp', 'pitch_sp', 'heading_sp', 'latitude', 'longitude', 'altitude_home', 'altitude_amsl', 'altitude_sp', 'airspeed', 'airspeed_sp', 'groundspeed', 'climb_rate', 'gps_nsat', 'gps_fix_type', 'battery_remaining', 'temperature', 'temperature_air', 'failsafe', 'wp_num', 'wp_distance']
-        ordered_fieldnames = [ 'time_usec', 'custom_mode', 'latitude', 'longitude', 'roll', 'pitch', 'heading', 'roll_sp', 'pitch_sp', 'heading_sp', 'altitude_home', 'altitude_amsl', 'altitude_sp', 'wp_distance', 'base_mode', 'landed_state', 'throttle', 'airspeed', 'airspeed_sp', 'groundspeed', 'climb_rate', 'gps_nsat', 'gps_fix_type', 'battery_remaining', 'temperature', 'temperature_air', 'failsafe', 'wp_num' ]
-        format = '<QIiihhHhhhhhhHBBbBBBbBBBbbBB'
-        native_format = bytearray('<QIiihhHhhhhhhHBBbBBBbBBBbbBB', 'ascii')
-        orders = [0, 14, 1, 15, 4, 5, 6, 16, 7, 8, 9, 2, 3, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 13]
-        lengths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        crc_extra = 179
-
-        def __init__(self, time_usec, base_mode, custom_mode, landed_state, roll, pitch, heading, throttle, roll_sp, pitch_sp, heading_sp, latitude, longitude, altitude_home, altitude_amsl, altitude_sp, airspeed, airspeed_sp, groundspeed, climb_rate, gps_nsat, gps_fix_type, battery_remaining, temperature, temperature_air, failsafe, wp_num, wp_distance):
-                MAVLink_message.__init__(self, MAVLink_high_latency_message.id, MAVLink_high_latency_message.name)
-                self._fieldnames = MAVLink_high_latency_message.fieldnames
-                self.time_usec = time_usec
-                self.base_mode = base_mode
-                self.custom_mode = custom_mode
-                self.landed_state = landed_state
-                self.roll = roll
-                self.pitch = pitch
-                self.heading = heading
-                self.throttle = throttle
-                self.roll_sp = roll_sp
-                self.pitch_sp = pitch_sp
-                self.heading_sp = heading_sp
-                self.latitude = latitude
-                self.longitude = longitude
-                self.altitude_home = altitude_home
-                self.altitude_amsl = altitude_amsl
-                self.altitude_sp = altitude_sp
-                self.airspeed = airspeed
-                self.airspeed_sp = airspeed_sp
-                self.groundspeed = groundspeed
-                self.climb_rate = climb_rate
-                self.gps_nsat = gps_nsat
-                self.gps_fix_type = gps_fix_type
-                self.battery_remaining = battery_remaining
-                self.temperature = temperature
-                self.temperature_air = temperature_air
-                self.failsafe = failsafe
-                self.wp_num = wp_num
-                self.wp_distance = wp_distance
-
-        def pack(self, mav, force_mavlink1=False):
-                return MAVLink_message.pack(self, mav, 179, struct.pack('<QIiihhHhhhhhhHBBbBBBbBBBbbBB', self.time_usec, self.custom_mode, self.latitude, self.longitude, self.roll, self.pitch, self.heading, self.roll_sp, self.pitch_sp, self.heading_sp, self.altitude_home, self.altitude_amsl, self.altitude_sp, self.wp_distance, self.base_mode, self.landed_state, self.throttle, self.airspeed, self.airspeed_sp, self.groundspeed, self.climb_rate, self.gps_nsat, self.gps_fix_type, self.battery_remaining, self.temperature, self.temperature_air, self.failsafe, self.wp_num), force_mavlink1=force_mavlink1)
-
 class MAVLink_vibration_message(MAVLink_message):
         '''
         Vibration levels and accelerometer clipping
@@ -6845,6 +6741,8 @@ class MAVLink_debug_message(MAVLink_message):
 mavlink_map = {
         MAVLINK_MSG_ID_TARGET_POSITION_NED : MAVLink_target_position_ned_message,
         MAVLINK_MSG_ID_TARGET_POSITION_NED_FILTERED : MAVLink_target_position_ned_filtered_message,
+        MAVLINK_MSG_ID_TARGET_POSITION_IMAGE : MAVLink_target_position_image_message,
+        MAVLINK_MSG_ID_GIMBAL_COMMAND : MAVLink_gimbal_command_message,
         MAVLINK_MSG_ID_HEARTBEAT : MAVLink_heartbeat_message,
         MAVLINK_MSG_ID_SYS_STATUS : MAVLink_sys_status_message,
         MAVLINK_MSG_ID_SYSTEM_TIME : MAVLink_system_time_message,
@@ -6966,7 +6864,6 @@ mavlink_map = {
         MAVLINK_MSG_ID_WIND_COV : MAVLink_wind_cov_message,
         MAVLINK_MSG_ID_GPS_INPUT : MAVLink_gps_input_message,
         MAVLINK_MSG_ID_GPS_RTCM_DATA : MAVLink_gps_rtcm_data_message,
-        MAVLINK_MSG_ID_HIGH_LATENCY : MAVLink_high_latency_message,
         MAVLINK_MSG_ID_VIBRATION : MAVLink_vibration_message,
         MAVLINK_MSG_ID_HOME_POSITION : MAVLink_home_position_message,
         MAVLINK_MSG_ID_SET_HOME_POSITION : MAVLink_set_home_position_message,
@@ -7023,6 +6920,7 @@ class MAVLinkSigning(object):
         self.sign_outgoing = False
         self.allow_unsigned_callback = None
         self.stream_timestamps = {}
+        self.sig_count = 0
         self.badsig_count = 0
         self.goodsig_count = 0
         self.unsigned_count = 0
@@ -7292,6 +7190,8 @@ class MAVLink(object):
                     raise MAVError('invalid MAVLink CRC in msgID %u 0x%04x should be 0x%04x' % (msgId, crc, crc2.crc))
 
                 sig_ok = False
+                if signature_len == MAVLINK_SIGNATURE_BLOCK_LEN:
+                    self.signing.sig_count += 1
                 if self.signing.secret_key is not None:
                     accept_signature = False
                     if signature_len == MAVLINK_SIGNATURE_BLOCK_LEN:
@@ -7370,65 +7270,129 @@ class MAVLink(object):
                 m._crc = crc
                 m._header = MAVLink_header(msgId, incompat_flags, compat_flags, mlen, seq, srcSystem, srcComponent)
                 return m
-        def target_position_ned_encode(self, x, y, z, vx, vy, vz, target_num):
+        def target_position_ned_encode(self, x, y, z, target_num):
                 '''
                 This message encodes the position of a target object
 
                 x                         : X Position in NED frame in meters (float)
                 y                         : Y Position in NED frame in meters (float)
                 z                         : Z Position in NED frame in meters (float)
-                vx                        : X velocity in NED frame in meter / s (float)
-                vy                        : Y velocity in NED frame in meter / s (float)
-                vz                        : Z velocity in NED frame in meter / s (float)
                 target_num                : ID of the target object. (uint8_t)
 
                 '''
-                return MAVLink_target_position_ned_message(x, y, z, vx, vy, vz, target_num)
+                return MAVLink_target_position_ned_message(x, y, z, target_num)
 
-        def target_position_ned_send(self, x, y, z, vx, vy, vz, target_num, force_mavlink1=False):
+        def target_position_ned_send(self, x, y, z, target_num, force_mavlink1=False):
                 '''
                 This message encodes the position of a target object
 
                 x                         : X Position in NED frame in meters (float)
                 y                         : Y Position in NED frame in meters (float)
                 z                         : Z Position in NED frame in meters (float)
-                vx                        : X velocity in NED frame in meter / s (float)
-                vy                        : Y velocity in NED frame in meter / s (float)
-                vz                        : Z velocity in NED frame in meter / s (float)
                 target_num                : ID of the target object. (uint8_t)
 
                 '''
-                return self.send(self.target_position_ned_encode(x, y, z, vx, vy, vz, target_num), force_mavlink1=force_mavlink1)
+                return self.send(self.target_position_ned_encode(x, y, z, target_num), force_mavlink1=force_mavlink1)
 
-        def target_position_ned_filtered_encode(self, x, y, z, vx, vy, vz, target_num):
+        def target_position_ned_filtered_encode(self, x, y, z, vx, vy, vz, var_x, var_y, var_z, var_vx, var_vy, var_vz, target_num):
                 '''
                 This message encodes the position of a target object
 
                 x                         : X Position in NED frame in meters (float)
                 y                         : Y Position in NED frame in meters (float)
                 z                         : Z Position in NED frame in meters (float)
-                vx                        : X velocity in NED frame in meter / s (float)
-                vy                        : Y velocity in NED frame in meter / s (float)
-                vz                        : Z velocity in NED frame in meter / s (float)
+                vx                        : X Velocity in NED frame in meters/s (float)
+                vy                        : Y Velocity in NED frame in meters/s (float)
+                vz                        : Z Velocity in NED frame in meters/s (float)
+                var_x                     : X Position variance in NED frame in meters^2 (float)
+                var_y                     : Y Position variance in NED frame in meters^2 (float)
+                var_z                     : Z Position variance in NED frame in meters^2 (float)
+                var_vx                    : X Velocity variance in NED frame in (meters/s)^2 (float)
+                var_vy                    : X Velocity variance in NED frame in (meters/s)^2 (float)
+                var_vz                    : X Velocity variance in NED frame in (meters/s)^2 (float)
                 target_num                : ID of the target object. (uint8_t)
 
                 '''
-                return MAVLink_target_position_ned_filtered_message(x, y, z, vx, vy, vz, target_num)
+                return MAVLink_target_position_ned_filtered_message(x, y, z, vx, vy, vz, var_x, var_y, var_z, var_vx, var_vy, var_vz, target_num)
 
-        def target_position_ned_filtered_send(self, x, y, z, vx, vy, vz, target_num, force_mavlink1=False):
+        def target_position_ned_filtered_send(self, x, y, z, vx, vy, vz, var_x, var_y, var_z, var_vx, var_vy, var_vz, target_num, force_mavlink1=False):
                 '''
                 This message encodes the position of a target object
 
                 x                         : X Position in NED frame in meters (float)
                 y                         : Y Position in NED frame in meters (float)
                 z                         : Z Position in NED frame in meters (float)
-                vx                        : X velocity in NED frame in meter / s (float)
-                vy                        : Y velocity in NED frame in meter / s (float)
-                vz                        : Z velocity in NED frame in meter / s (float)
+                vx                        : X Velocity in NED frame in meters/s (float)
+                vy                        : Y Velocity in NED frame in meters/s (float)
+                vz                        : Z Velocity in NED frame in meters/s (float)
+                var_x                     : X Position variance in NED frame in meters^2 (float)
+                var_y                     : Y Position variance in NED frame in meters^2 (float)
+                var_z                     : Z Position variance in NED frame in meters^2 (float)
+                var_vx                    : X Velocity variance in NED frame in (meters/s)^2 (float)
+                var_vy                    : X Velocity variance in NED frame in (meters/s)^2 (float)
+                var_vz                    : X Velocity variance in NED frame in (meters/s)^2 (float)
                 target_num                : ID of the target object. (uint8_t)
 
                 '''
-                return self.send(self.target_position_ned_filtered_encode(x, y, z, vx, vy, vz, target_num), force_mavlink1=force_mavlink1)
+                return self.send(self.target_position_ned_filtered_encode(x, y, z, vx, vy, vz, var_x, var_y, var_z, var_vx, var_vy, var_vz, target_num), force_mavlink1=force_mavlink1)
+
+        def target_position_image_encode(self, time_usec, u, v, dist, pitch, yaw, var_u, var_v, var_z, target_num):
+                '''
+                This message encodes the position of a target in an image
+
+                time_usec                 : Timestamp (micros since boot or Unix epoch) (uint64_t)
+                u                         : X Position in pixels frame in meters (uint32_t)
+                v                         : Y Position in pixels frame in meters (uint32_t)
+                dist                      : distance to target meters (float)
+                pitch                     : Pitch from body to camera frame (float)
+                yaw                       : Yaw from body to camera frame (float)
+                var_u                     : variance of u (float)
+                var_v                     : variance of v (float)
+                var_z                     : variance of dist (float)
+                target_num                : ID of the target object. (uint8_t)
+
+                '''
+                return MAVLink_target_position_image_message(time_usec, u, v, dist, pitch, yaw, var_u, var_v, var_z, target_num)
+
+        def target_position_image_send(self, time_usec, u, v, dist, pitch, yaw, var_u, var_v, var_z, target_num, force_mavlink1=False):
+                '''
+                This message encodes the position of a target in an image
+
+                time_usec                 : Timestamp (micros since boot or Unix epoch) (uint64_t)
+                u                         : X Position in pixels frame in meters (uint32_t)
+                v                         : Y Position in pixels frame in meters (uint32_t)
+                dist                      : distance to target meters (float)
+                pitch                     : Pitch from body to camera frame (float)
+                yaw                       : Yaw from body to camera frame (float)
+                var_u                     : variance of u (float)
+                var_v                     : variance of v (float)
+                var_z                     : variance of dist (float)
+                target_num                : ID of the target object. (uint8_t)
+
+                '''
+                return self.send(self.target_position_image_encode(time_usec, u, v, dist, pitch, yaw, var_u, var_v, var_z, target_num), force_mavlink1=force_mavlink1)
+
+        def gimbal_command_encode(self, time_usec, pitch, yaw):
+                '''
+                This message encodes the position of a target in an image
+
+                time_usec                 : Timestamp (micros since boot or Unix epoch) (uint64_t)
+                pitch                     : Pitch from body to camera frame (float)
+                yaw                       : Yaw from body to camera frame (float)
+
+                '''
+                return MAVLink_gimbal_command_message(time_usec, pitch, yaw)
+
+        def gimbal_command_send(self, time_usec, pitch, yaw, force_mavlink1=False):
+                '''
+                This message encodes the position of a target in an image
+
+                time_usec                 : Timestamp (micros since boot or Unix epoch) (uint64_t)
+                pitch                     : Pitch from body to camera frame (float)
+                yaw                       : Yaw from body to camera frame (float)
+
+                '''
+                return self.send(self.gimbal_command_encode(time_usec, pitch, yaw), force_mavlink1=force_mavlink1)
 
         def heartbeat_encode(self, type, autopilot, base_mode, custom_mode, system_status, mavlink_version=3):
                 '''
@@ -7842,7 +7806,7 @@ class MAVLink(object):
                 (GPS frame).
 
                 time_usec                 : Timestamp (microseconds since UNIX epoch or microseconds since system boot) (uint64_t)
-                fix_type                  : See the GPS_FIX_TYPE enum. (uint8_t)
+                fix_type                  : 0-1: no fix, 2: 2D fix, 3: 3D fix, 4: DGPS, 5: RTK. Some applications will not use the value of this field unless it is at least two, so always correctly fill in the fix. (uint8_t)
                 lat                       : Latitude (WGS84), in degrees * 1E7 (int32_t)
                 lon                       : Longitude (WGS84), in degrees * 1E7 (int32_t)
                 alt                       : Altitude (AMSL, NOT WGS84), in meters * 1000 (positive for up). Note that virtually all GPS modules provide the AMSL altitude in addition to the WGS84 altitude. (int32_t)
@@ -7865,7 +7829,7 @@ class MAVLink(object):
                 (GPS frame).
 
                 time_usec                 : Timestamp (microseconds since UNIX epoch or microseconds since system boot) (uint64_t)
-                fix_type                  : See the GPS_FIX_TYPE enum. (uint8_t)
+                fix_type                  : 0-1: no fix, 2: 2D fix, 3: 3D fix, 4: DGPS, 5: RTK. Some applications will not use the value of this field unless it is at least two, so always correctly fill in the fix. (uint8_t)
                 lat                       : Latitude (WGS84), in degrees * 1E7 (int32_t)
                 lon                       : Longitude (WGS84), in degrees * 1E7 (int32_t)
                 alt                       : Altitude (AMSL, NOT WGS84), in meters * 1000 (positive for up). Note that virtually all GPS modules provide the AMSL altitude in addition to the WGS84 altitude. (int32_t)
@@ -8830,14 +8794,14 @@ class MAVLink(object):
                 '''
                 return self.send(self.safety_allowed_area_encode(frame, p1x, p1y, p1z, p2x, p2y, p2z), force_mavlink1=force_mavlink1)
 
-        def attitude_quaternion_cov_encode(self, time_usec, q, rollspeed, pitchspeed, yawspeed, covariance):
+        def attitude_quaternion_cov_encode(self, time_boot_ms, q, rollspeed, pitchspeed, yawspeed, covariance):
                 '''
                 The attitude in the aeronautical frame (right-handed, Z-down, X-front,
                 Y-right), expressed as quaternion. Quaternion order is
                 w, x, y, z and a zero rotation would be expressed as
                 (1 0 0 0).
 
-                time_usec                 : Timestamp (microseconds since system boot or since UNIX epoch) (uint64_t)
+                time_boot_ms              : Timestamp (milliseconds since system boot) (uint32_t)
                 q                         : Quaternion components, w, x, y, z (1 0 0 0 is the null-rotation) (float)
                 rollspeed                 : Roll angular speed (rad/s) (float)
                 pitchspeed                : Pitch angular speed (rad/s) (float)
@@ -8845,16 +8809,16 @@ class MAVLink(object):
                 covariance                : Attitude covariance (float)
 
                 '''
-                return MAVLink_attitude_quaternion_cov_message(time_usec, q, rollspeed, pitchspeed, yawspeed, covariance)
+                return MAVLink_attitude_quaternion_cov_message(time_boot_ms, q, rollspeed, pitchspeed, yawspeed, covariance)
 
-        def attitude_quaternion_cov_send(self, time_usec, q, rollspeed, pitchspeed, yawspeed, covariance, force_mavlink1=False):
+        def attitude_quaternion_cov_send(self, time_boot_ms, q, rollspeed, pitchspeed, yawspeed, covariance, force_mavlink1=False):
                 '''
                 The attitude in the aeronautical frame (right-handed, Z-down, X-front,
                 Y-right), expressed as quaternion. Quaternion order is
                 w, x, y, z and a zero rotation would be expressed as
                 (1 0 0 0).
 
-                time_usec                 : Timestamp (microseconds since system boot or since UNIX epoch) (uint64_t)
+                time_boot_ms              : Timestamp (milliseconds since system boot) (uint32_t)
                 q                         : Quaternion components, w, x, y, z (1 0 0 0 is the null-rotation) (float)
                 rollspeed                 : Roll angular speed (rad/s) (float)
                 pitchspeed                : Pitch angular speed (rad/s) (float)
@@ -8862,7 +8826,7 @@ class MAVLink(object):
                 covariance                : Attitude covariance (float)
 
                 '''
-                return self.send(self.attitude_quaternion_cov_encode(time_usec, q, rollspeed, pitchspeed, yawspeed, covariance), force_mavlink1=force_mavlink1)
+                return self.send(self.attitude_quaternion_cov_encode(time_boot_ms, q, rollspeed, pitchspeed, yawspeed, covariance), force_mavlink1=force_mavlink1)
 
         def nav_controller_output_encode(self, nav_roll, nav_pitch, nav_bearing, target_bearing, wp_dist, alt_error, aspd_error, xtrack_error):
                 '''
@@ -8896,7 +8860,7 @@ class MAVLink(object):
                 '''
                 return self.send(self.nav_controller_output_encode(nav_roll, nav_pitch, nav_bearing, target_bearing, wp_dist, alt_error, aspd_error, xtrack_error), force_mavlink1=force_mavlink1)
 
-        def global_position_int_cov_encode(self, time_usec, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance):
+        def global_position_int_cov_encode(self, time_boot_ms, time_utc, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance):
                 '''
                 The filtered global position (e.g. fused GPS and accelerometers). The
                 position is in GPS-frame (right-handed, Z-up). It  is
@@ -8907,7 +8871,8 @@ class MAVLink(object):
                 accuracy and completeness. Please use the
                 GLOBAL_POSITION_INT message for a minimal subset.
 
-                time_usec                 : Timestamp (microseconds since system boot or since UNIX epoch) (uint64_t)
+                time_boot_ms              : Timestamp (milliseconds since system boot) (uint32_t)
+                time_utc                  : Timestamp (microseconds since UNIX epoch) in UTC. 0 for unknown. Commonly filled by the precision time source of a GPS receiver. (uint64_t)
                 estimator_type            : Class id of the estimator this estimate originated from. (uint8_t)
                 lat                       : Latitude, expressed as degrees * 1E7 (int32_t)
                 lon                       : Longitude, expressed as degrees * 1E7 (int32_t)
@@ -8919,9 +8884,9 @@ class MAVLink(object):
                 covariance                : Covariance matrix (first six entries are the first ROW, next six entries are the second row, etc.) (float)
 
                 '''
-                return MAVLink_global_position_int_cov_message(time_usec, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance)
+                return MAVLink_global_position_int_cov_message(time_boot_ms, time_utc, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance)
 
-        def global_position_int_cov_send(self, time_usec, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance, force_mavlink1=False):
+        def global_position_int_cov_send(self, time_boot_ms, time_utc, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance, force_mavlink1=False):
                 '''
                 The filtered global position (e.g. fused GPS and accelerometers). The
                 position is in GPS-frame (right-handed, Z-up). It  is
@@ -8932,7 +8897,8 @@ class MAVLink(object):
                 accuracy and completeness. Please use the
                 GLOBAL_POSITION_INT message for a minimal subset.
 
-                time_usec                 : Timestamp (microseconds since system boot or since UNIX epoch) (uint64_t)
+                time_boot_ms              : Timestamp (milliseconds since system boot) (uint32_t)
+                time_utc                  : Timestamp (microseconds since UNIX epoch) in UTC. 0 for unknown. Commonly filled by the precision time source of a GPS receiver. (uint64_t)
                 estimator_type            : Class id of the estimator this estimate originated from. (uint8_t)
                 lat                       : Latitude, expressed as degrees * 1E7 (int32_t)
                 lon                       : Longitude, expressed as degrees * 1E7 (int32_t)
@@ -8944,16 +8910,17 @@ class MAVLink(object):
                 covariance                : Covariance matrix (first six entries are the first ROW, next six entries are the second row, etc.) (float)
 
                 '''
-                return self.send(self.global_position_int_cov_encode(time_usec, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance), force_mavlink1=force_mavlink1)
+                return self.send(self.global_position_int_cov_encode(time_boot_ms, time_utc, estimator_type, lat, lon, alt, relative_alt, vx, vy, vz, covariance), force_mavlink1=force_mavlink1)
 
-        def local_position_ned_cov_encode(self, time_usec, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance):
+        def local_position_ned_cov_encode(self, time_boot_ms, time_utc, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance):
                 '''
                 The filtered local position (e.g. fused computer vision and
                 accelerometers). Coordinate frame is right-handed,
                 Z-axis down (aeronautical frame, NED / north-east-down
                 convention)
 
-                time_usec                 : Timestamp (microseconds since system boot or since UNIX epoch) (uint64_t)
+                time_boot_ms              : Timestamp (milliseconds since system boot). 0 for system without monotonic timestamp (uint32_t)
+                time_utc                  : Timestamp (microseconds since UNIX epoch) in UTC. 0 for unknown. Commonly filled by the precision time source of a GPS receiver. (uint64_t)
                 estimator_type            : Class id of the estimator this estimate originated from. (uint8_t)
                 x                         : X Position (float)
                 y                         : Y Position (float)
@@ -8967,16 +8934,17 @@ class MAVLink(object):
                 covariance                : Covariance matrix upper right triangular (first nine entries are the first ROW, next eight entries are the second row, etc.) (float)
 
                 '''
-                return MAVLink_local_position_ned_cov_message(time_usec, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance)
+                return MAVLink_local_position_ned_cov_message(time_boot_ms, time_utc, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance)
 
-        def local_position_ned_cov_send(self, time_usec, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance, force_mavlink1=False):
+        def local_position_ned_cov_send(self, time_boot_ms, time_utc, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance, force_mavlink1=False):
                 '''
                 The filtered local position (e.g. fused computer vision and
                 accelerometers). Coordinate frame is right-handed,
                 Z-axis down (aeronautical frame, NED / north-east-down
                 convention)
 
-                time_usec                 : Timestamp (microseconds since system boot or since UNIX epoch) (uint64_t)
+                time_boot_ms              : Timestamp (milliseconds since system boot). 0 for system without monotonic timestamp (uint32_t)
+                time_utc                  : Timestamp (microseconds since UNIX epoch) in UTC. 0 for unknown. Commonly filled by the precision time source of a GPS receiver. (uint64_t)
                 estimator_type            : Class id of the estimator this estimate originated from. (uint8_t)
                 x                         : X Position (float)
                 y                         : Y Position (float)
@@ -8990,7 +8958,7 @@ class MAVLink(object):
                 covariance                : Covariance matrix upper right triangular (first nine entries are the first ROW, next eight entries are the second row, etc.) (float)
 
                 '''
-                return self.send(self.local_position_ned_cov_encode(time_usec, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance), force_mavlink1=force_mavlink1)
+                return self.send(self.local_position_ned_cov_encode(time_boot_ms, time_utc, estimator_type, x, y, z, vx, vy, vz, ax, ay, az, covariance), force_mavlink1=force_mavlink1)
 
         def rc_channels_encode(self, time_boot_ms, chancount, chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, chan9_raw, chan10_raw, chan11_raw, chan12_raw, chan13_raw, chan14_raw, chan15_raw, chan16_raw, chan17_raw, chan18_raw, rssi):
                 '''
@@ -10696,7 +10664,7 @@ class MAVLink(object):
                 frame).
 
                 time_usec                 : Timestamp (microseconds since UNIX epoch or microseconds since system boot) (uint64_t)
-                fix_type                  : See the GPS_FIX_TYPE enum. (uint8_t)
+                fix_type                  : 0-1: no fix, 2: 2D fix, 3: 3D fix, 4: DGPS fix, 5: RTK Fix. Some applications will not use the value of this field unless it is at least two, so always correctly fill in the fix. (uint8_t)
                 lat                       : Latitude (WGS84), in degrees * 1E7 (int32_t)
                 lon                       : Longitude (WGS84), in degrees * 1E7 (int32_t)
                 alt                       : Altitude (AMSL, not WGS84), in meters * 1000 (positive for up) (int32_t)
@@ -10717,7 +10685,7 @@ class MAVLink(object):
                 frame).
 
                 time_usec                 : Timestamp (microseconds since UNIX epoch or microseconds since system boot) (uint64_t)
-                fix_type                  : See the GPS_FIX_TYPE enum. (uint8_t)
+                fix_type                  : 0-1: no fix, 2: 2D fix, 3: 3D fix, 4: DGPS fix, 5: RTK Fix. Some applications will not use the value of this field unless it is at least two, so always correctly fill in the fix. (uint8_t)
                 lat                       : Latitude (WGS84), in degrees * 1E7 (int32_t)
                 lon                       : Longitude (WGS84), in degrees * 1E7 (int32_t)
                 alt                       : Altitude (AMSL, not WGS84), in meters * 1000 (positive for up) (int32_t)
@@ -11655,78 +11623,6 @@ class MAVLink(object):
 
                 '''
                 return self.send(self.gps_rtcm_data_encode(flags, len, data), force_mavlink1=force_mavlink1)
-
-        def high_latency_encode(self, time_usec, base_mode, custom_mode, landed_state, roll, pitch, heading, throttle, roll_sp, pitch_sp, heading_sp, latitude, longitude, altitude_home, altitude_amsl, altitude_sp, airspeed, airspeed_sp, groundspeed, climb_rate, gps_nsat, gps_fix_type, battery_remaining, temperature, temperature_air, failsafe, wp_num, wp_distance):
-                '''
-                Message appropriate for high latency connections like Iridium
-
-                time_usec                 : Timestamp (microseconds since UNIX epoch) (uint64_t)
-                base_mode                 : System mode bitfield, see MAV_MODE_FLAG ENUM in mavlink/include/mavlink_types.h (uint8_t)
-                custom_mode               : A bitfield for use for autopilot-specific flags. (uint32_t)
-                landed_state              : The landed state. Is set to MAV_LANDED_STATE_UNDEFINED if landed state is unknown. (uint8_t)
-                roll                      : roll (centidegrees) (int16_t)
-                pitch                     : pitch (centidegrees) (int16_t)
-                heading                   : heading (centidegrees) (uint16_t)
-                throttle                  : throttle (percentage) (int8_t)
-                roll_sp                   : roll setpoint (centidegrees) (int16_t)
-                pitch_sp                  : pitch setpoint (centidegrees) (int16_t)
-                heading_sp                : heading setpoint (centidegrees) (int16_t)
-                latitude                  : Latitude, expressed as degrees * 1E7 (int32_t)
-                longitude                 : Longitude, expressed as degrees * 1E7 (int32_t)
-                altitude_home             : Altitude above the home position (meters) (int16_t)
-                altitude_amsl             : Altitude above mean sea level (meters) (int16_t)
-                altitude_sp               : Altitude setpoint relative to the home position (meters) (int16_t)
-                airspeed                  : airspeed (m/s) (uint8_t)
-                airspeed_sp               : airspeed setpoint (m/s) (uint8_t)
-                groundspeed               : groundspeed (m/s) (uint8_t)
-                climb_rate                : climb rate (m/s) (int8_t)
-                gps_nsat                  : Number of satellites visible. If unknown, set to 255 (uint8_t)
-                gps_fix_type              : See the GPS_FIX_TYPE enum. (uint8_t)
-                battery_remaining         : Remaining battery (percentage) (uint8_t)
-                temperature               : Autopilot temperature (degrees C) (int8_t)
-                temperature_air           : Air temperature (degrees C) from airspeed sensor (int8_t)
-                failsafe                  : failsafe (each bit represents a failsafe where 0=ok, 1=failsafe active (bit0:RC, bit1:batt, bit2:GPS, bit3:GCS, bit4:fence) (uint8_t)
-                wp_num                    : current waypoint number (uint8_t)
-                wp_distance               : distance to target (meters) (uint16_t)
-
-                '''
-                return MAVLink_high_latency_message(time_usec, base_mode, custom_mode, landed_state, roll, pitch, heading, throttle, roll_sp, pitch_sp, heading_sp, latitude, longitude, altitude_home, altitude_amsl, altitude_sp, airspeed, airspeed_sp, groundspeed, climb_rate, gps_nsat, gps_fix_type, battery_remaining, temperature, temperature_air, failsafe, wp_num, wp_distance)
-
-        def high_latency_send(self, time_usec, base_mode, custom_mode, landed_state, roll, pitch, heading, throttle, roll_sp, pitch_sp, heading_sp, latitude, longitude, altitude_home, altitude_amsl, altitude_sp, airspeed, airspeed_sp, groundspeed, climb_rate, gps_nsat, gps_fix_type, battery_remaining, temperature, temperature_air, failsafe, wp_num, wp_distance, force_mavlink1=False):
-                '''
-                Message appropriate for high latency connections like Iridium
-
-                time_usec                 : Timestamp (microseconds since UNIX epoch) (uint64_t)
-                base_mode                 : System mode bitfield, see MAV_MODE_FLAG ENUM in mavlink/include/mavlink_types.h (uint8_t)
-                custom_mode               : A bitfield for use for autopilot-specific flags. (uint32_t)
-                landed_state              : The landed state. Is set to MAV_LANDED_STATE_UNDEFINED if landed state is unknown. (uint8_t)
-                roll                      : roll (centidegrees) (int16_t)
-                pitch                     : pitch (centidegrees) (int16_t)
-                heading                   : heading (centidegrees) (uint16_t)
-                throttle                  : throttle (percentage) (int8_t)
-                roll_sp                   : roll setpoint (centidegrees) (int16_t)
-                pitch_sp                  : pitch setpoint (centidegrees) (int16_t)
-                heading_sp                : heading setpoint (centidegrees) (int16_t)
-                latitude                  : Latitude, expressed as degrees * 1E7 (int32_t)
-                longitude                 : Longitude, expressed as degrees * 1E7 (int32_t)
-                altitude_home             : Altitude above the home position (meters) (int16_t)
-                altitude_amsl             : Altitude above mean sea level (meters) (int16_t)
-                altitude_sp               : Altitude setpoint relative to the home position (meters) (int16_t)
-                airspeed                  : airspeed (m/s) (uint8_t)
-                airspeed_sp               : airspeed setpoint (m/s) (uint8_t)
-                groundspeed               : groundspeed (m/s) (uint8_t)
-                climb_rate                : climb rate (m/s) (int8_t)
-                gps_nsat                  : Number of satellites visible. If unknown, set to 255 (uint8_t)
-                gps_fix_type              : See the GPS_FIX_TYPE enum. (uint8_t)
-                battery_remaining         : Remaining battery (percentage) (uint8_t)
-                temperature               : Autopilot temperature (degrees C) (int8_t)
-                temperature_air           : Air temperature (degrees C) from airspeed sensor (int8_t)
-                failsafe                  : failsafe (each bit represents a failsafe where 0=ok, 1=failsafe active (bit0:RC, bit1:batt, bit2:GPS, bit3:GCS, bit4:fence) (uint8_t)
-                wp_num                    : current waypoint number (uint8_t)
-                wp_distance               : distance to target (meters) (uint16_t)
-
-                '''
-                return self.send(self.high_latency_encode(time_usec, base_mode, custom_mode, landed_state, roll, pitch, heading, throttle, roll_sp, pitch_sp, heading_sp, latitude, longitude, altitude_home, altitude_amsl, altitude_sp, airspeed, airspeed_sp, groundspeed, climb_rate, gps_nsat, gps_fix_type, battery_remaining, temperature, temperature_air, failsafe, wp_num, wp_distance), force_mavlink1=force_mavlink1)
 
         def vibration_encode(self, time_usec, vibration_x, vibration_y, vibration_z, clipping_0, clipping_1, clipping_2):
                 '''
